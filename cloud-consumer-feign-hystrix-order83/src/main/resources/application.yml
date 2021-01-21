@@ -1,0 +1,30 @@
+server:
+  port: 83
+
+eureka:
+  client:
+    # 自己是否注册进Eureka
+    register-with-eureka: false
+    service-url:
+            defaultZone: http://localhost:7001/eureka
+#      defaultZone: http://eureka7001.com:7001/eureka/,http://eureka7002.com:7002/eureka/
+
+#设置Feign默认等待时间  openfeign默认支持ribbon
+ribbon:
+  #指的是默认连接所用时间，适用于网络状态正常情况下，两端连接所用时间
+  ConnectTimeout: 5000
+  #指的是建立连接后从服务器读取到可用资源所用的时间
+  ReadTimeout: 5000
+feign:                 #让feign支持Hystrix    测试 开启Hystrix必须设置全局超时时间 不然默认1S
+  hystrix:
+    enabled: true
+hystrix:
+  command:
+    default:   ## 支持类级别
+      execution:
+        #开启超时配置
+        timeout:
+          enabled: true
+        isolation:
+          thread:
+            timeoutInMilliseconds: 4000  # 调用者执行的超时时间默认是1s
