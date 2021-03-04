@@ -1,7 +1,8 @@
 服务注册与发现：
 Eureka 服务注册中心          Java语言    Ap  A高可用P:(分区容错性)                     对外暴露接口：HTTP
-zookeeper 服务注册中心没看   Java语言    CP  C数据一致P:(分区容错性)                                客户端
+zookeeper 服务注册中心没看   Java语言    CP  C数据一致P:(分区容错性)     无控制台                    客户端
 Consul  服务注册中心         Go语言      Cp  C数据一致P:(分区容错性)                                HTTP/DNS
+nacos   服务注册中心                     AP 或CP可以切换           底层融合了ribbon，支持负载均衡
 服务健康检查上述三种都可以支持   都集成了SpringCloClod    redis CP  Mysql CA
 CAP理论的核心是：一个分布式系统不可能同时满足一致性，可用性和分区容错性这三个需求
 CA：单点集群  满足一致性 可用性系统 通常可扩展性不强大
@@ -33,6 +34,8 @@ AvailabilityFilteringRule                 先过滤掉故障实例然后选择�
 ZoneAvoidanceRule                         默认规则，复合判断server所在区域的性能和server的可用性   选择服务器
 
 
+
+
 Feign：
 可以设置超时时间  默认1s ribbon:
                             #指的是默认连接所用时间，适用于网络状态正常情况下，两端连接所用时间
@@ -45,6 +48,8 @@ NONE：默认的，不显示任何日志
 BASIC：仅记录请求方法，URL，响应状态码及执行时间
 HEADERS：除了BASIC中定义的信息之外，还有请求和响应的头信息
 FULL：除了HEADERS中定义的信息之外，还有请求和响应的正文及元数据
+
+
 
 
 Hystrix断路器
@@ -96,30 +101,318 @@ Hystrix:
 Hystrix工作流程：1先看缓存,缓存有返回,没有判断是否开启熔断,开启直接降级,没开启判断是否线程池满了,满了降级,没满调用服务看是否报错或者超时,是降级
                 则执行成功返回。。如果熔断开启的话会在一定的窗口期进入半熔断。
 
+
+
 服务网关
 Zuul服务网关(代理+路由+过滤三大功能)
     路由:将外部请求转发到具体的微服务实例上,是实现外部访问统一入口的基础
     过滤器：对请求处理过程进行干预，实现请求校验、服务聚合等功能的基础
     Zuul自身注册进Eureka，同时从Eureka中获取其他微服务消息，也既以后的访问微服务都是通过Zuul跳转后获得
+
 gateway异步非阻塞模型上开发的
-   动态路由：能够匹配任何请求属性   可以对路由指定Predicate(断言)和Filter(过滤器)
-   集成Hystrix的断路器功能        请求限流功能
-   集成SpringCloud服务发现功能
-   易于编写的Predicate(断言)和Filter(过滤器)
-   支持路径重写
+路由route：Web请求通过一些匹配条件,定位到真正的服务节点，并在这个转发的前后进行精确的控制
+        断言predicate就是匹配条件   +  过滤器就是精确的控制  +   URI就可以实现一个路由
+常用的gateway断言predicate：
+     After：在什么时间之后生效
+     Before：在什么时间之前生效
+     Between：在什么时间之中生效
+     Cookie：username ,whj      //cookie必须携带key username   后面是value
+     Header：头中携带什么参数名，必须符合什么正则表达式
+     Method：get  post
+     Query：必须携带的参数名称, 正则表达式规定参数的值
+过滤器：在请求前后进行过滤
+     自定义过滤器：实现import GlobalFilter,Order
+网关优点：
+   1.动态路由：能够匹配任何请求属性
+   2.可以对路由指定Predicate(断言)和Filter(过滤器)
+   3.集成Hystrix的断路器功能
+   4.请求限流功能
+   5.集成SpringCloud服务发现功能
+   6.易于编写的Predicate(断言)和Filter(过滤器)
+   7.支持路径重写
+
+
+服务配置：  微服务模块越来越多,很多配置文件会出现很多重复性操作
+nocas做服务配置：
+${prefix}-${spring.profile-active}.${file-extension}
+prefix:默认spring.application.name   也可以通过spring.cloud.nacos.cofig.prefix
+spring.profile-active:是当前环境profile 当spring.profile.active为空,就省略中间部分
+file-extension：文件格式 目前只支持properties和yml文件
+不需要在配置一个服务器端模块,nacos支持自动刷新.改完配置客户端就会自动拉取最新配置
+nocas新增功能  分类管理：namespace（默认公共的为public） + group（默认Default_group） + dataID
+  1.namespace：用于区分部署环境。
+  2.groupID+dataID：逻辑上区分两个目标对象  默认集群(cluster)也是default
+  3.根据启动环境读取相应环境的配置(dev,test)
+nacos集群和持久化配置：
+    1.自身携带嵌入式数据库 derby：
+        问题：所以启动多个默认配置下的nacos节点(集群),数据存在一致性问题
+        修改：采用集中式存储的方式来支持集群的部署,目前只支持mysql的存储
+nacos：linux集群配置
+   1.安装 切换mysql （修改config文件下的application.properties）
+   2.修改config文件下的cluster文件。  使用hostname命令获取实际linux中ens33的ip  后面写多个集群的各自端口号
+   3.修改启动startup.sh启动脚本。 1.加一个port参数2.最下面加- Dserver.port=${port}
+   4.启动命令后面拼接 -p 端口号
+   5.nginx配置
+
+
+configServer：为微服务提供集中化的外部配置支持,为各个不同微服务应用提供一个中心化外部配置。
+    1.集中管理配置文件
+    2.不同环境不同配置。分环境部署
+    3.配置发生变动不需要重启即可感知变化并使用最新配置
+    4.将配置以rest接口暴露
+配置：
+    1.label：分支
+    2.name：服务名
+    3.profiles：环境（dev/test/prod）
+
+客户端：通过bootstrap.xml获取服务器端加载好的配置文件
+bootstrap是系统级配置文件。优先级高
+application是用户级的
+服务器端：从github中获取配置文件信息
+
+发现问题：github修改配置文件,服务器端能立即读取到。但是客户端需要重启才能读取到服务器端读取到的新配置文件
+解决：将客户端加入到监控中。在controller上加config中的@RefreshScope注解。。但是还需要运维发送post请求重新刷新加载配置文件。避免重启
+上述问题：如果服务器要精确部分更新。批量脚本执行post请求就不适用了。只能一部分一部分的修改
+
+
+
+BUS消息总线：在实际中 bus总线配合config服务配置完成自动化的配置加载
+  :用来将分布式系统的节点与轻量级的消息系统衔接起来的框架,它整合了java事件处理机制和消息中间件的功能。目前只支持：RabbitMQ和kafka
+设计思想：
+    1.利用消息总线，通知一个客户端/bus/Refresh，而刷新所有客户端
+    2.利用消息总线通知一个服务器ConfigServer端/bus/Refresh，而刷新所有客户端
+    第一种不适合原因：1.打破微服务个节点的平等性2.打破服务的单一性,增加了节点3.代码迁移地址修改会发生变化
+ 服务器端： yml文件中添加rabbitMQ的配置将服务器端也加入到监控中。
+ 客户端：yml文件中添加rabbitMQ的配置   如果没有加入监控需要在加入监控中
+    当github上文件修改时。只需要发送一次post请求到服务器bus/refresh方法即可实现客户端自动刷新
+定点刷新：
+POST：http://localhost:3344/actuator/bus-refresh/{destination}
+destination：服务名+端口号
+
+
+
+消息推送：Stream（消息推送）：如果系统中存在两种消息中间件。可以引入Stream简化开发
+     屏蔽底层消息中间件的差异,降低切换成本,统一消息的编程模型
+
+
+
+分布式请求链路跟踪：springCloud sleuth
+     当微服务系统越来越多,各模块调用链路越来越长,就需要引入链路跟踪,监控的系统,利于优化速度，排查错误。
+zipkin:   D:softfa:IDEA                运行jar：java -jar zipkin-server-2.12.9-exec.jar
+  运行成功访问：http：//localhost：9411/zipkin
+  1.traceId:一次请求全局只有一个traceId，唯一链路标识id
+  2.spanId:一个链路中每次请求都会有一个spanId
+  3.parentId:上一个链路的ID
+  4.cs:Client Sent 客户端发起请求的时间
+  5.cr:Client Receive 客户端收到处理完请求的时间。
+  6.ss:Server Receive 服务端处理完逻辑的时间。
+  7.sr:Server Receive 服务端收到调用端请求的时间。
+见8001和80配置：引入pom，在application配置文件中加入sleuth和zipkin配置
+
+
+ --------------------------------------------------------------------------------------------------------------------------------
+ --------------------------------------------------------------------------------------------------------------------------------
+ --------------------------------------------------------------------------------------------------------------------------------
+ --------------------------------------------------------------------------------------------------------------------------------
+ --------------------------------------------------------------------------------------------------------------------------------
+ --------------------------------------------------------------------------------------------------------------------------------
+ --------------------------------------------------------------------------------------------------------------------------------
+ Spring：轻量级框架,以IOC和AOP为核心
+ 1.IOC低耦合高内聚2.AOP面向切面变成3.事务的控制4.方便集成测试5.方便集成其他优秀框架6.降低API使用难度,Spring对很多API进行封装提供Template
+IOC控制反转：把对象的创建权交给Spring
+XML方式：
+Bean的配置：id自定义 class类的全路径名  init-method 初始化方法  destroy-method 销毁方法
+ApplicationContext.getBean两种方式 一种通过id   一种通过字节码文件。。如果bean注入两次通过字节码会报错。无法判断要哪个
+  实例化三种： 无参构造                 <bean id="userDao" calss="com.whj.dao.UserDao"/>
+                需要现有一个StaticFactory类 然后里面有一个静态的getUserDao方法
+              工厂静态方法             <bean id="userDao" class="com.whj.dao.StaticFactory" factory-method="getUserDao"/>
+                需要现有一个StaticFactory类 然后里面有一个getUserDao方法   这样就不能直接类名.方法调用 需要先实例创建StaticFactory
+              工厂实例方法             <bean id="factory" calss="com.whj.dao.StaticFactory"/>
+                                      <bean id="userDao" factory-bean="factory" factory-method="getUserDao"/>
+scope作用范围
+singleton：单例    如果是单例则在加载xml配置文件时,bean就被创建  只要Spring容器在对象就一直活着，容器销毁对象才销毁
+prototype：多例    如果是多例则在加载xml配置文件时不创建bean。getBean的时候才创建,get一次创建一个 只要对象在使用就活着,长时间不使用会被GC回收
+request：web项目中，Spring创建一个Bean的对象，将对象存放到request域中
+session：web项目中，Spring创建一个Bean的对象，将对象存放到session域中
+global session：web项目中，应用在Portlet环境,如果没有这个环境,那么相当于session
+依赖注入：
+    set方法注入
+    有参构造注入
+    P指针注入：一般还是用set因为这个多了很长不好看
+引入其他文件：<import resource="aaalication-dao.xml"/>
+注解方式：
+@Autowired:直接去寻找类型的bean但是如果相同类型bean有多个会出错。不知道要哪个
+@qualifier("id"):根据id去容器寻找一样的bean 但是需要配合Autowired一起使用
+@Resource:相当于Autowired+qualifier
+@ComponentScan:指定扫描包
+@import:配置文件加载其他分支配置文件
+@propertyResource：用于加载.properties的文件
+
+整合junit：
+@RunWith("SpringJunit4ClassRunner.class")
+@ContextConfiguration("classpath:application.xml") 或者不用xml用核心配置类@ContextConfiguration("class={Config.class}")
+
+SpringMvc:
+缺点：servlet中每次都需要创建Spring容器加载application
+改进：将创建加载的过程交给监听器。容器启动就加载配置文件。ContextLoaderListener存放WebApplicationContextUtil取
+前端控制器：统一处理请求。在配置时候需要把SpringMvc配置文件读取进去
+配置视图解析器：默认转发可以换成重定向。加前缀后缀
+返回字符串：@ResponseBody 但是如果是实体类需要加<mvc:annotation-driven>      mvc注解驱动
+请求：获取集合参数 1.使用VO包装接收 2.如果是ajax请求 可以直接用@RequestBody List<User>接收
+开放静态资源:<mvc:resources mappingL="/js/**" location="/js/"/>   或者：<mvc: default-servlet-handler/>
+@RequestParam(value="name",defaultValue="whj")
+
+
+
+ Mybatis：是持久层框架,简化开发使开发者不用关注创建链接等操作,只需要关注SQL语句。
+       使用ORM(对象映射关系)思想
+           ORM：就是把数据库和实体类及实体类的属性对应起来，让我们可以操作实体类就实现操作数据库
+注意事项：XML的mapper标签namespace值为接口全限定类名
+         接口名为XML的id值
+         接口的包路径和XML包路径保持一致
 
 
 
 
+--------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------
+MQ(MessageQuene) 消息队列
+       通过生产者和消费者模型,生产者不断向消息队列中发消息,消费者不断从消息队列中拿消息,因为消息的生产和消费都是异步进行的,而且
+       只需要关心消息的发送和接收,实现系统解耦.  别名消息中间件,利用高效的消息传递机制进行平台无关的数据交流。
+
+1.ActiveMQ
+   Apache出品,是比较老牌的消息中间件,但是性能不太好。
+2.kafka
+   Apache出品,追求高吞吐量,但是对事务,消息重复，丢失，错误没有严格要求,所以在大数据领域追求速度用的比较广
+3.RocketMQ
+   阿里开源消息中间件.借鉴kafka高吞吐,高可用。他对消息的可靠传输及事务做了优化,但是对事务的优化版本需要收费
+4.RabbtiMQ
+   使用erlang语言开发的消息队列,基于AMQP协议实现。AMQP主要特征就是面向对象、队列、路由、可靠性、安全。AMQP协议更多在企业系统内对数据一致性
+   可靠性和稳定性要求很高的场景,即使数据丢失了也可以恢复,对性能和高吞吐量要求还在其次。和Spring框架无缝整合
 
 
+--------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------
+进程：
+       后台运行的一个程序
+线程：
+       轻量级的进程(一个进程内可以包含多个线程，至少包含一个线程)
+并发：(多线程操作同一个资源)
+    当系统只有一个CPU,同一时刻只有一个线程被执行,多个线程快速轮换执行。宏观上像多个线程同时执行。微观上是时间分片多个线程争夺CPU交替执行
+并行：CPU多核 提高CPU使用率就是使用线程池
+    如果系统有多个CPU，则系统可能并行。当一个CPU执行一个线程时，另一个CPU在执行另外一个线程。互不争夺CPU,可以同时进行
+高并发：
+    指短时间内大量访问《双十一。想要系统能适应高并发：提升硬件。数据库优化、开启多线程 等等  多线程可以提高CPU利用率
+JAVA默认有几个线程？2  main主线程和GC垃圾回收
+JAVA真的可以开启线程吗？不可以。.start方法内部其实调用了本地方法。底层的C++。java是运行在虚拟机上的。不能操作硬件的
+juc
+java.util.concurrent：
+java.util.concurrent.atomic：
+java.util.concurrent.locks：
+
+公平锁和非公平锁：公平不公平  不公平效率高   java默认非公平锁   加锁可以保证并发的安全性
+synchronized
+
+Lock接口
+  1.ReentrantLock(可重入锁)
+  2.读锁
+  3.写锁
+condition 监视器
+    1.代替了synchronized的wait和notify方法
+    2.同时加入了精准唤醒
 
 
+多线程的状态  Thread.state可以查看状态
+    1.new 新建
+    2.Runnable 运行
+    3.Blocked 阻塞
+    4.Waiting 等待的一个状态(死等)
+    5.Timed_Waiting 等多少秒就不等了
+    6.Terminated  终止  代表执行完毕
 
+wait和sleep的区别
+    1.wait-----》Object                        sleep-------》thread
+    2.          释放锁                                   不释放锁
+    3. 只能在synchronized同步代码块中使用                   任何地方都可以
+synchronized和lock区别
+    1.synchronized 是一个关键字                            lock 是一个java类
+    2.synchronized 无法判断获取锁的状态                    lock 可以判断是否获取到了锁
+    3.synchronized 会自动释放锁                            lock 手动释放锁   不释放就是死锁   手动释放更加安全
+    4.synchronized 线程1(获得锁,阻塞了)  线程2(死等)       lock 不一定会一直等待 tryLock方法
+    5.synchronized 默认可重入,不可中断,非公平              lock 默认可重入,可判断中断,非公平(可以自己设置)
+    6.synchronized 适合锁少量代码同步问题                  lock 适合锁大量的同步代码
 
+常用的辅助工具类类：
+    countDownLatch：
+阻塞队列：   一般在d多线程并发处理和线程池用到
+    1.当队列满了,不能继续存的时候需要阻塞.等待取出然后在存
+    2.当队列没有的时候,必须阻塞等待生产才能取
+阻塞队列对应的四组API         添加                 移除           查看队首元素
+    1.抛出异常                    add                 remove          element
+    2.不抛出异常，有返回值        offer                poll            peek
+    3.超时等待                    offer有参           poll有参
+    4.阻塞等待                    put                 take
+同步队列SynchronousQueue
+    进去一个元素，必须等待元素取出 才能继续存放元素
+    存   put   取  take
+顶级 collection --》queue---》blockingQueue
+    blockingQueue：阻塞队列   》》》一边存 另一边取
+    AbstractQueue：非阻塞队列
+    Deque：双端队列           》》》 两边都可以存取
 
+线程池： （池化技术）
+   原来程序的问题：  程序运行：本质：1.占用系统资源  2.线程的创建和销毁很消耗资源
+   解决：           事先准备好一些线程资源,有人要用就来拿,用来还回来
+   线程池好处：    1.线程复用  2.可以控制最大的线程数   3.方便管理线程
+线程池：三大方法   七大参数
+    1.Executors.newSingleThreadExecutor       //单个线程        //todo:和固定一样,允许请求队列长度为Integer.Max 会堆积大量请求->OOM
+    2.Executors.newFixedThreadPool(int值)     //创建一个固定大小的线程池
+    3.Executors.newCachedThreadPool()         //可伸缩的，遇强则强//todo 和下面一样,允许创建的线程数Integer.Max,会创建大量线程->OOM
+    4.Executors.newScheduledThreadPool()      //定时线程 延时3s处理    //todo   所以推荐使用ThreadPoolExecutor来创建线程池
+三种方法本质都是new ThreadPoolExecutor  这个方法的七个参数
+    1.corePoolSize                                       核心线程池大小(最小)
+    2.maximumPoolSize                                    最大线程池大小 (可伸缩的创建最大21亿  OOM内存溢出)
+    3.keepAliveTime                                      超时释放时间(超时没人调用,)
+    4.TimeUnit                                           时间单位 (上面超时时间的单位)
+    5.BlockingQueue<Runnable>                            阻塞队列
+    6.ThreadFactory                                      线程工厂，创建线程的,一般不用动
+    7.RejectedExecutionHandler                           拒绝策略
+    最大线程到底改如何定义？
+      1.CPU密集型：几核CPU就是允许最大线程    Runtime.getRuntime().availableProcessors()获取
+      2.IO密集型：判断程序中十分耗IO的线程, 只要大于这个数就行 一般两倍
+四种拒绝策略
+    1.new ThreadPoolExecutor.AbortPolicy()  //丢弃任务并抛出RejectedExecutionException异常。
+    2.new ThreadPoolExecutor.CallerRunsPolicy() //由调用线程处理该任务 【谁调用，谁处理】
+    3.new ThreadPoolExecutor.DiscardPolicy()   //也是丢弃任务，但是不抛出异常。
+    //当任务被拒绝添加时，会抛弃任务队列中最旧的任务也就是最先加入队列的，再把这个新任务添加进去。
+    //在rejectedExecution先从任务队列种弹出最先加入的任务，空出一个位置，然后再次执行execute方法把任务加入队列。
+    4.new ThreadPoolExecutor.DiscardOldestPolicy()
 
-
+-------------------
+常遇到的错误？
+1.内存溢出：线程池没有用ThreadPoolExecutor而用的Executors里的四种线程
+2.并发修改异常：多线程中集合读写
+throwable
+  错误：非程序导致的问题。内存溢出
+  异常：运行时和非运行时(IO异常 SQL异常)
+当事务中包含try{}catch(Exception e){}代码块时 事务不会回滚 解决方法
+   1.在catch中 throw new RunTimeException    没有return  对前端不友好
+   2.在catch中 throw e                       没有return  对前端不友好
+   3.手动回滚   TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();       可以return  给前端展示正常状态码
+四大函数接口
+  1.lambda     解决了匿名内部类也就是new 接口时代码冗余的现象          JUC/lambda/LambdaExpressDemo.java
+  2.链式编程
+  3.函数式接口  @FunctionalInterface注解 里面必须只有一个抽象方法 可以有多个default,static方法及实现 JUC/lambda/LambdaExpressDemo.java
+     四大原生函数式接口
+        1.consumer：消费型接口 accept方法 有输入 没有返回
+        2.function：函数型接口 apply方法 传入参数T返回参数R
+        3.predicate: 断定型接口 test方法  输入一个参数  返回一个Boolean
+        4.supplier：供应型接口           没有输入 只有返回
+  4.Stream流式计算
 
 
 
