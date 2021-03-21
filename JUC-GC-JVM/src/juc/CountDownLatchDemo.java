@@ -11,7 +11,7 @@ public class CountDownLatchDemo {
 
         CountDownLatch countDownLatch = new CountDownLatch(6);
 
-        for (int i = 1; i <=6 ; i++) {
+        for (int i = 1; i <=70 ; i++) {
             new Thread(()->{
                 System.out.println(Thread.currentThread().getName() + "go out");
                 countDownLatch.countDown();//减一操作

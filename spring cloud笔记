@@ -1,0 +1,210 @@
+服务注册与发现：
+Eureka 服务注册中心          Java语言    Ap  A高可用P:(分区容错性)                     对外暴露接口：HTTP
+zookeeper 服务注册中心没看   Java语言    CP  C数据一致P:(分区容错性)     无控制台                    客户端
+Consul  服务注册中心         Go语言      Cp  C数据一致P:(分区容错性)                                HTTP/DNS
+nacos   服务注册中心                     AP 或CP可以切换           底层融合了ribbon，支持负载均衡
+服务健康检查上述三种都可以支持   都集成了SpringCloClod    redis CP  Mysql CA
+CAP理论的核心是：一个分布式系统不可能同时满足一致性，可用性和分区容错性这三个需求
+CA：单点集群  满足一致性 可用性系统 通常可扩展性不强大
+CP：满足一致性和分区容错性  性能不高
+AP：满足可用性和分区容错性   通常对一致性要求低一些
+discovery  服务发现  在8001
+@LoadBalanced     开启负载均衡注解  在80
+
+
+
+ Ribbon
+ Ribbon就是------------》》》(Load Balance负载均衡)  +  (RestTemplate调用)：
+将用户请求平摊的分配多个服务器上，达到系统HA(高可用性)  常见软件：Nginx 、LVS、 硬件F5
+Nginx是服务器端的负载均衡(集中式)     分布式负载均衡
+     ：客户端所有请求都交给Nginx。Nginx实现转发请求。既负载均衡是由服务器实现的
+Ribbon是客户端的负载均衡 (进程内)      集群式负载均衡
+     ：在调用微服务接口时候,会在注册中心上获取注册信息服务列表,之后缓存到JVM本地。从而在本地实现RPC远程调用技术
+Ribbon工作分成两步:
+第一步：先选择EurekaServer，它优先选择同一区域内负载比较少的server
+第二步：根据用户指定策略，在server的服务列表中选择一个服务地址
+以下七种算法 都是IRule接口的实现
+com.netflix.loadbalancer.RoundRobinRule   轮询(默认算法)    手写轮询--  Order80
+    原理(rest请求第几次请求数 % 服务器集群总数 = 实际调用服务器位置下标 每次服务重启 rest请求数更新为1)
+com.netflix.loadbalancer.RandomRuleO      随机
+com.netflix.loadbalancer.RetryRule        先按照轮询策略 如果服务获取失败会在指定时间内进行重试，获取可用服务
+WeightedResponseTimeRule                  响应时间加权重   对轮询的扩展，响应时间越快 权重越大 越容易被选择
+BestAvailableRule                         会先过滤掉由于多次访问故障而处于断路器跳闸状态的服务，然后选择一个并发量最小的服务
+AvailabilityFilteringRule                 先过滤掉故障实例然后选择并发较小的实例
+ZoneAvoidanceRule                         默认规则，复合判断server所在区域的性能和server的可用性   选择服务器
+
+
+
+
+Feign：
+可以设置超时时间  默认1s ribbon:
+                            #指的是默认连接所用时间，适用于网络状态正常情况下，两端连接所用时间
+                            ConnectTimeout: 5000
+                            #指的是建立连接后从服务器读取到可用资源所用的时间
+                            ReadTimeout: 5000
+日志打印功能：可以通过配置来调整日志级别，从而了解Feign中Http请求的细节 就是对Feign接口的调用进行监控和输出
+日志级别：
+NONE：默认的，不显示任何日志
+BASIC：仅记录请求方法，URL，响应状态码及执行时间
+HEADERS：除了BASIC中定义的信息之外，还有请求和响应的头信息
+FULL：除了HEADERS中定义的信息之外，还有请求和响应的正文及元数据
+
+
+
+
+Hystrix断路器
+断路器：
+    本身是一种开关装置,某个服务发生故障，通过断路器故障监控，向调用方返回一个备选响应，
+    而不是长时间等待或者抛出异常,保证调用方线程不被长时间不必要占用,从而避免雪崩
+
+服务雪崩：多个微服务之间调用的时候，A调B B调C  B和C之间又调用E，访问量大的时候，如果E服务不可用或者响应时间过长，B和C超时或重试机制就会被执行
+         新的调用不断累积产生大量的等待或者重试，慢慢B和C的CPU会被耗尽然后也down机，A会堆积对B、C调用 然后耗尽CPU宕机  这就是雪崩
+雪崩原因：
+          程序bug导致服务不可用，或者运行缓慢
+          缓存击穿，导致调用全部访问某服务，导致down掉
+          访问量的突然激增。
+          硬件问题，这感觉只能说是点背了⊙︿⊙。
+Hystrix:
+    是一个用于处理分布式系统延迟和容错的开源库，在分布式调用中不可不免调用失败(超时或异常),Hystrix保证一个服务出现问题的情况下，不会导致整体雪崩
+
+服务降级Fallback：  服务器忙，请稍后再试，不让客户等待的友好提示
+            程序运行异常
+            超时
+            服务熔断触发服务降级
+            线程池/信号量打满也会导致服务降级
+
+超时导致服务器变慢(转圈)--超时不再等待   对方服务超时了，调用者不能一直卡死等待，必须又服务降级
+出错(宕机或程序运行出错)--出错要兜底     对方服务down机了，调用者不能一直卡死等待，必须又服务降级
+对方服务OK，调用者自己出故障或者有自我要求(自己的等待时间小于服务执行时间)，必须有服务降级
+1）客户端服务降级  启动类注解@EnableHystrix（回路） 在方法上定义@(HystrixCommand)属性             服务器端运行报错或者超时都会降级
+                  属性内定义FallbackMethod回调方法和CommandProperties属性(属性里面可以设置超时时间)
+      注解：启动类@EnableHystrix(断路器)    中  包括---》@EnableCirCuitBreaker（回路）
+2）上述改进：每一个方法都需要一个FallbackMethod降级方法，导致程序代码臃肿,所以可以在Controller类名上统一全局默认降级方法
+             类名上加@@DefaultProperties(defaultFallback = "方法名")    在需要降级的方法上继续写@(HystrixCommand)属性
+3）继续改进：上述方法可以实现代码臃肿，但是还是和其他业务类混淆起来了。所以提出一种新的降级方案，
+             给每个service接口生成对应的实现类  在接口的FeignClient(多加一个fallback属性)值为实现类Class文件
+服务熔断break：
+    熔断是应对雪崩效应的一种微服务链路保护机制,当扇出链路的某个微服务不可用或响应时间太长,会进行服务降级,进而熔断该节点的调用,快速返回错误日志,当检测
+    到该服务响应正常后,恢复该链路。相当于保险丝到达最大服务访问后,直接拒绝访问,拉闸限电,然后调用服务降级的方法返回友好提示
+      @HystrixCommand(fallbackMethod = "paymentCircuitBreakerFallback",commandProperties = {
+         @HystrixProperty(name = "circuitBreaker.enabled",value = "true"),  //是否开启断路器
+         @HystrixProperty(name = "circuitBreaker.requestVolumeThreshold",value = "10"),  //请求次数(次数必须大于等于十次才能开启)
+         @HystrixProperty(name = "circuitBreaker.sleepWindowInMilliseconds",value = "10000"), //时间窗口期(熔断后10s进入一次半熔断状态)
+         @HystrixProperty(name = "circuitBreaker.errorThresholdPercentage",value = "60"), //失败率达到多少熔断
+          })
+1）熔断打开：请求不再进行调用当前服务,内部设置时钟一般为MTTR(窗口期),当打开时长到达窗口期进入半熔断状态
+2）熔断关闭：熔断关闭不会对服务进行熔断
+3）熔断半开：部分请求根据规则调用当前服务，如果请求成功且符合规则就会任务服务恢复正常,关闭熔断
+
+服务限流FlawLimit： 秒杀高并发等操作,严禁一窝蜂过来拥挤,大家排队，一秒N个有序进行
+
+Hystrix工作流程：1先看缓存,缓存有返回,没有判断是否开启熔断,开启直接降级,没开启判断是否线程池满了,满了降级,没满调用服务看是否报错或者超时,是降级
+                则执行成功返回。。如果熔断开启的话会在一定的窗口期进入半熔断。
+
+
+
+服务网关
+Zuul服务网关(代理+路由+过滤三大功能)
+    路由:将外部请求转发到具体的微服务实例上,是实现外部访问统一入口的基础
+    过滤器：对请求处理过程进行干预，实现请求校验、服务聚合等功能的基础
+    Zuul自身注册进Eureka，同时从Eureka中获取其他微服务消息，也既以后的访问微服务都是通过Zuul跳转后获得
+
+gateway异步非阻塞模型上开发的
+路由route：Web请求通过一些匹配条件,定位到真正的服务节点，并在这个转发的前后进行精确的控制
+        断言predicate就是匹配条件   +  过滤器就是精确的控制  +   URI就可以实现一个路由
+常用的gateway断言predicate：
+     After：在什么时间之后生效
+     Before：在什么时间之前生效
+     Between：在什么时间之中生效
+     Cookie：username ,whj      //cookie必须携带key username   后面是value
+     Header：头中携带什么参数名，必须符合什么正则表达式
+     Method：get  post
+     Query：必须携带的参数名称, 正则表达式规定参数的值
+过滤器：在请求前后进行过滤
+     自定义过滤器：实现import GlobalFilter,Order
+网关优点：
+   1.动态路由：能够匹配任何请求属性
+   2.可以对路由指定Predicate(断言)和Filter(过滤器)
+   3.集成Hystrix的断路器功能
+   4.请求限流功能
+   5.集成SpringCloud服务发现功能
+   6.易于编写的Predicate(断言)和Filter(过滤器)
+   7.支持路径重写
+
+
+服务配置：  微服务模块越来越多,很多配置文件会出现很多重复性操作
+nocas做服务配置：
+${prefix}-${spring.profile-active}.${file-extension}
+prefix:默认spring.application.name   也可以通过spring.cloud.nacos.cofig.prefix
+spring.profile-active:是当前环境profile 当spring.profile.active为空,就省略中间部分
+file-extension：文件格式 目前只支持properties和yml文件
+不需要在配置一个服务器端模块,nacos支持自动刷新.改完配置客户端就会自动拉取最新配置
+nocas新增功能  分类管理：namespace（默认公共的为public） + group（默认Default_group） + dataID
+  1.namespace：用于区分部署环境。
+  2.groupID+dataID：逻辑上区分两个目标对象  默认集群(cluster)也是default
+  3.根据启动环境读取相应环境的配置(dev,test)
+nacos集群和持久化配置：
+    1.自身携带嵌入式数据库 derby：
+        问题：所以启动多个默认配置下的nacos节点(集群),数据存在一致性问题
+        修改：采用集中式存储的方式来支持集群的部署,目前只支持mysql的存储
+nacos：linux集群配置
+   1.安装 切换mysql （修改config文件下的application.properties）
+   2.修改config文件下的cluster文件。  使用hostname命令获取实际linux中ens33的ip  后面写多个集群的各自端口号
+   3.修改启动startup.sh启动脚本。 1.加一个port参数2.最下面加- Dserver.port=${port}
+   4.启动命令后面拼接 -p 端口号
+   5.nginx配置
+
+
+configServer：为微服务提供集中化的外部配置支持,为各个不同微服务应用提供一个中心化外部配置。
+    1.集中管理配置文件
+    2.不同环境不同配置。分环境部署
+    3.配置发生变动不需要重启即可感知变化并使用最新配置
+    4.将配置以rest接口暴露
+配置：
+    1.label：分支
+    2.name：服务名
+    3.profiles：环境（dev/test/prod）
+
+客户端：通过bootstrap.xml获取服务器端加载好的配置文件
+bootstrap是系统级配置文件。优先级高
+application是用户级的
+服务器端：从github中获取配置文件信息
+
+发现问题：github修改配置文件,服务器端能立即读取到。但是客户端需要重启才能读取到服务器端读取到的新配置文件
+解决：将客户端加入到监控中。在controller上加config中的@RefreshScope注解。。但是还需要运维发送post请求重新刷新加载配置文件。避免重启
+上述问题：如果服务器要精确部分更新。批量脚本执行post请求就不适用了。只能一部分一部分的修改
+
+
+
+BUS消息总线：在实际中 bus总线配合config服务配置完成自动化的配置加载
+  :用来将分布式系统的节点与轻量级的消息系统衔接起来的框架,它整合了java事件处理机制和消息中间件的功能。目前只支持：RabbitMQ和kafka
+设计思想：
+    1.利用消息总线，通知一个客户端/bus/Refresh，而刷新所有客户端
+    2.利用消息总线通知一个服务器ConfigServer端/bus/Refresh，而刷新所有客户端
+    第一种不适合原因：1.打破微服务个节点的平等性2.打破服务的单一性,增加了节点3.代码迁移地址修改会发生变化
+ 服务器端： yml文件中添加rabbitMQ的配置将服务器端也加入到监控中。
+ 客户端：yml文件中添加rabbitMQ的配置   如果没有加入监控需要在加入监控中
+    当github上文件修改时。只需要发送一次post请求到服务器bus/refresh方法即可实现客户端自动刷新
+定点刷新：
+POST：http://localhost:3344/actuator/bus-refresh/{destination}
+destination：服务名+端口号
+
+
+
+消息推送：Stream（消息推送）：如果系统中存在两种消息中间件。可以引入Stream简化开发
+     屏蔽底层消息中间件的差异,降低切换成本,统一消息的编程模型
+
+
+
+分布式请求链路跟踪：springCloud sleuth
+     当微服务系统越来越多,各模块调用链路越来越长,就需要引入链路跟踪,监控的系统,利于优化速度，排查错误。
+zipkin:   D:softfa:IDEA                运行jar：java -jar zipkin-server-2.12.9-exec.jar
+  运行成功访问：http：//localhost：9411/zipkin
+  1.traceId:一次请求全局只有一个traceId，唯一链路标识id
+  2.spanId:一个链路中每次请求都会有一个spanId
+  3.parentId:上一个链路的ID
+  4.cs:Client Sent 客户端发起请求的时间
+  5.cr:Client Receive 客户端收到处理完请求的时间。
+  6.ss:Server Receive 服务端处理完逻辑的时间。
+  7.sr:Server Receive 服务端收到调用端请求的时间。
+见8001和80配置：引入pom，在application配置文件中加入sleuth和zipkin配置

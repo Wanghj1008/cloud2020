@@ -1,0 +1,182 @@
+MySQL
+        好处：1.实现数据的持久化  2.使用完整的管理系统管理 利于查询
+数据库(DB)：
+        存储数据的仓库。有组织的数据
+数据库管理系统(DBMS)：
+        MYSQL，oragle
+结构化查询语言(SQL):
+        专门和数据库软件通讯的结构化查询语言
+DQL：查询
+        联合查询 union  联合查询   1.会自动去掉重复项 不去重 union all  2.列数必须一致 类型和顺序必须一致
+DML：操作
+        insert  into from user () values ()
+        update user set username=?
+        delete from user where               和 truncate删除
+            1.                              效率高
+            2.  有返回值                     没有返回值
+            3.新增从断点开始                  新增从1开始
+            4.可以回滚                        不能回滚
+            5.可以加where条件                    没有条件  直接清空
+主键和唯一的区别        ：  unique
+                主键不重复     不为空      最多一个主键            允许组合主键
+                唯一不重复     可以为null  可以有很多唯一          允许组合唯一
+外键：
+      1.要求在从表设置外键关联
+      2.从表外键列要和主表的关联列类型一致，名称可以不一样
+      3.主表中的关联列必须是一个key。。一般是主键、唯一键
+      4.插入数据时先插入主表数据 再插入从表数据  而删除数据时先删除从表数据 后删除主表数据
+      5.级联删除：在创建外键的后面添加 on delete cascade     6.级联置空： on delete set null
+DDL：定义语言
+   库和表的操作
+        1.创建：create
+        2.修改：alter
+            1.修改列名：alter table 表名 change column 列名 新名 类型
+            2.修改列类型：alter table 表名 modify column 列名 新类型
+            3.添加新列：alter table 表名 add  column 列名  类型
+            4.删除列：alter table 表名 drop column 列名
+            5.修改表名：alter table 表名 rename to 新表名
+        3.删除：drop
+        4.复制表：
+            1.仅仅复制结构 ：create table 新表名 like 旧表
+            2.复制结构和数据：create table 新表名 select * from 旧表   复制部分结构 + 条件
+   整形：Tinyint  smallint  mediumint  int/Integer   bigint
+   字节：  1         2         3           4            8            如果插入数值超过整形范围,插入的是临界值  设置无符号 ：unsigned
+   小数：浮点型：float  double(无默认)    定点型：decimal 默认(10,0)                   默认都有两个参数 一个长度一个保留几位小数
+   字符型：char  varchar(长度可变)  插入几个字符就给多少空间.char类型耗费空间
+  创建表：约束                                              列级约束：直接在字段名和类型后面追加即可：非空 主键  唯一 默认。不支持外键和检查
+        1.主键  primary key                                 表级约束：可以不写【constraint 约束名】 约束类型  字段名   不支持非空
+        2.非空  not null                                    一般都用列级写在字段后面。 只有外键用表级
+        3.检查  check(age='男' or age=‘nv’)  mysql不支持 写了没用但不报错
+        4.唯一  unique
+        5.默认  default
+        6.外键  foreign key References
+  标识列（自增长列）：Auto_Increment
+        注意：标识列必须是一个key  主键 unique唯一。
+        一个表只能有一个标识列。标识列类型为数值型  可以设置步长  手动插入可以设置起始值
+TCL：事务控制语言
+    事务：多个sql语句组成一个执行单元 要么都成功要么都失败
+    存储引擎：INNODB 支持事务     MYISAM：不支持
+    事务的属性：ACID
+            原子性：一个事务是一个不可拆分的整体。
+            一致性：执行前后数据一致
+            隔离性：多个事务之间不干扰
+            持久性：事务一旦提交永久保存
+     事务没提交或者回滚之前。只是将结果放到内存中。提交才放到磁盘文件中。回滚就撤销内存
+    隐式事务：
+            默认自动提交事务开启。。修改 插入和删除会自动带有事务    autoCommit=on
+    显式事务：
+            先设置自动提交事务是关闭的        set autocommit=0； start transaction
+    多个事务访问数据库相同数据时会产生问题      (必须要有隔离机制。否则会有并发问题)
+            1.脏读：1读取了2修改但是未提交的数据。若2回滚,1读取的数据是无效的
+            2.不可重复读：1读取字段后2做了更新  然后1又去读取发现值不一样了   1在同一个事务中操作。
+            3.幻读：1读取3行然后2插入一条数据。1更新数据发现更新了4条数据       1在同一个事务中操作。
+    隔离级别：
+            1.Uncommited  最低级别 读未提交。可以产生幻读，幻读，不可重读问题
+            2.read-commited  读已提交  可以产生幻读和不可重复读。解决脏读
+            3.RepeatAble-read 默认：(可重复读)  可以解决脏读和不可重读。不能解决幻读
+            4.seraible串行(xing)化：解决幻读  但是性能太低
+    保存点：savepoint  可以设定回滚到保存点
+视图：  虚拟表，是通过普通表动态生成的数据  和普通表一样使用
+     只保存sql逻辑,不保存查询结果     应用场景：多个地方用到相同的查询结果   2.该查询结果使用的sql较复杂
+     创建：create view 视图名 as  sql语句     使用就是  select * from  视图民  where  条件
+     修改：1.create or replace view 视图名 as 查询语句   2.alter view 视图名 as 查询语句
+     删除视图：drop view  视图名,视图名
+     好处：1.实现了sql重用  2.简化了复杂sql编写   3.保护数据 提高安全性
+     简单视图也可以进行增删改，而且会修改原始表。 具备distinct,group by,join,合并就不能更新了
+视图和表
+     1.create view     占用空间保存sql逻辑   可以使用基本增删改查     视图sql逻辑中包含去重,组合,分组等不允许增删改
+     2.create table    占用空间保存数据      可以使用增删改查
+mysql登录/退出：
+        mysql -h localhost -p 3306 -u root -p root       /////////  exit  / ctrl+c
+着重号：`name`  代表字段名  否则会和关键字冲突     起别名：最好双引号
+
+分组查询group by：    能用分组前就用分组前  性能高    支持多个字段分组--》直接group by age,status
+        分组前数据原始表 可以直接使用   分组后筛选数据源是分组后的结果集 是一个虚拟表 需要用having操作
+
+
++号只能操作两个数值。会将字符串转换成数值. 如果不能转换则为0 .只要有一方为null  结果为null
+
+单行函数：
+分组函数（=聚合函数= 统计函数=组函数）：统计使用   都忽略null  都可以个distinct
+sum求和   avg平均: 一般处理数值型   字符无法处理           忽略null
+max最大   min最小：数字，日期，和字符都支持比较大小  坑：String的值max 9>10 需要转换int使用max（age+0）转换  忽略null
+count计算个数：注意计算字段为null不计算   忽略null
+count(*)=count(1) 总条数  效率 5.5以前MYISAM存储引擎 内部有索引count(*)快    现在INNODB 两种差不多
+
+笛卡尔积现象：表1有n列表2有m列.输出结果=n*m
+        原因：没有有效的连接 全部查询直接全排列             解决：建立有效的连接条件
+   sql92 ： 只支持内连接     sql99 ：支持内连接+外连接(左外和右外)+交叉连接   不支持全外连接
+   内连接：                 sql99  inner join      inner可以省略
+      1.等值连接：         select * from user,job   where user.jobId=job.id
+            多表连接为多表的交集 起别名字段也必须使用别名 原名不好使
+      2.非等值连接：       select * from user,ageI  where user.age between ageI.min and ageI.max;
+      3.自连接:            select a.name,a.id,b.name,b.id from user a,user b where a.manager.id=b.id
+            涉及到的表只是自己
+   外连接：
+      1.左外连接             left outer join
+      2.右外连接             right outer join
+      3.全外连接             full outer join    内连接结果+表1有表二没有的+表2有表1没有的    MYSQL不支持全外连接
+   交叉连接：                cross join ：  就是笛卡尔乘积
+
+子查询：
+      按子查询出现的位置：1.select后面
+                               标量子查询
+                         2.from后面
+                               表子查询
+                         3.where和having后面
+                               标量子查询  单行
+                               列子查询    多行      in 结果集包括其中一种就行    any/some  结果集任意包含一种就行    all 结果集全部包含
+                               行子查询    一行多列
+                         4.exists 后面：里面的表子查询是否有值   exists(完整的查询语句)  有值为1 没有为0
+                                表子查询
+      按子查询的行列数不同：1.标量子查询：结果集只有一行一列
+                           2.列子查询：结果集只有一列
+                           3.行子查询：结果集只有一行
+                           4.表子查询：结果集一般为多行多列
+
+upper：字母转换大写
+lower：字母转换小写
+subString (字段,开始索引从1开始,截取几个字符串)
+inString：返回子串第一次出现的索引。如果找不到为0
+trim:去除字符串前后的空格,中间去不掉   也可以 trim('a' from "abbbva")->bbbc  去除左右指定字符串,不能去除中间
+ignore： insert ignore into actor values ('3','ED','CHASE')    主键重复会忽略  不重复插入u
+
+
+Lpad('哈哈哈',6,"A") --》AAA哈哈哈   6个字符(不是字节)不够用A填充。  Lpad('哈哈哈',2,"A")-->哈哈  如果本来不够会截取
+Rpad('哈哈哈',6,"A") --》哈哈哈AAA   6个字符(不是字节)不够用A填充。  Lpad('哈哈哈',2,"A")-->哈哈  如果本来不够会截取
+Replace:替换  ("哈哈你是哈哈王八蛋","哈哈","呵呵")---》 呵呵你是呵呵王八蛋   全部替换
+DISTINCT 去重
+Length(字段名) 返回这个字段名的字节长度。  utf8 字母一字节汉字三字节  GBK 字母一字节汉字两字节
+between and
+        1.包含临界值   两个临界值必须前面小后面大
+concat   拼接       concat_ws('-',"A","B","C") -->A-B-C  用-拼接
+reverse  反转
+
+
+round("字段",2):---》四舍五入  小数点后保留两位
+ceil：向上取整            floor：向下取整      mod：取余           Rand：0~1随机数
+truncate("字段",2):-->截断 包留小数点后2位    也可以做全部删除 效率高
+
+now()返回现在日期+时间      curdate()返回现在日期,不含时间   curtime返回当前时间，不含日期
+dateDiff(日期1,日期2)  返回两个日期之差  天
+year  month  day  hour  minute second
+addDate("2017-06-15",Interval 10 day) 加十天 ---》2017-06-25
+addTime("2017-06-15 10:10:10","2:10:10")---->2017-06-15 12:20:20   加2小时10分10秒
+str_to_date('2016-01-01',"%Y-%m-%d")  String转换date
+date_format(now(),"%Y-%m-%d")
+   format:规则
+   %Y —显示四位 2015； %y —只显示后两位 15
+   %M —月份的英文October； %m —月份阿拉伯显示 01-12 ； %c ——月份的阿拉伯显示 1-12
+   %d —阿拉伯显示 00-31；  %D ——带有英文后缀 1st-31th；  %e ——阿拉伯显示 1-31；  %j ——年的天 001-366
+   %H —00-23 ； %h ——01-12；  %I ——01-12；  %k ——0-23；  %l ——1-12
+like
+      查询第三个字符为a第五个字符为b的  '__a_b%'
+      查询包含a和e 并且a在e前面    like '%a%e%'
+      第二个字符为_的 '_\_%' 转义   或者  '_￥_%' escape ￥ 标识￥为转义字符
+面试题：select * from user  和select * from user where age like '%%'查询结果一样吗？
+       不一样。字段为null  '%%'查询不到
+if(true,1,0)
+case    when 条件 then 语句  else 语句
+ifnull(字段,想要的值)
+name is null   等价于 name <=> null   判断字段为空
+DESC  表名 显示结构

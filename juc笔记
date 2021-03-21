@@ -1,0 +1,188 @@
+进程：
+       后台运行的一个程序
+线程：
+       轻量级的进程(一个进程内可以包含多个线程，至少包含一个线程)
+并发：(多线程操作同一个资源)
+    当系统只有一个CPU,同一时刻只有一个线程被执行,多个线程快速轮换执行。宏观上像多个线程同时执行。微观上是时间分片多个线程争夺CPU交替执行
+并行：CPU多核 提高CPU使用率就是使用线程池
+    如果系统有多个CPU，则系统可能并行。当一个CPU执行一个线程时，另一个CPU在执行另外一个线程。互不争夺CPU,可以同时进行
+高并发：
+    指短时间内大量访问《双十一。想要系统能适应高并发：提升硬件。数据库优化、开启多线程 等等  多线程可以提高CPU利用率
+JAVA默认有几个线程？2  main主线程和GC垃圾回收
+JAVA真的可以开启线程吗？不可以。.start方法内部其实调用了本地方法。底层的C++。java是运行在虚拟机上的。不能操作硬件的
+juc
+java.util.concurrent：
+java.util.concurrent.atomic：
+java.util.concurrent.locks：
+
+公平锁和非公平锁：公平不公平  不公平效率高   java默认非公平锁   加锁可以保证并发的安全性
+synchronized
+
+Lock接口
+  1.ReentrantLock(可重入锁)
+  2.读锁
+  3.写锁
+condition 监视器
+    1.代替了synchronized的wait和notify方法
+    2.同时加入了精准唤醒
+
+
+多线程的状态  Thread.state可以查看状态
+    1.new 新建
+    2.Runnable 运行
+    3.Blocked 阻塞
+    4.Waiting 等待的一个状态(死等)
+    5.Timed_Waiting 等多少秒就不等了
+    6.Terminated  终止  代表执行完毕
+
+wait和sleep的区别
+    1.wait-----》Object                        sleep-------》thread
+    2.          释放锁                                   不释放锁
+    3. 只能在synchronized同步代码块中使用                   任何地方都可以
+synchronized和lock区别
+    1.synchronized 是一个关键字                            lock 是一个java类
+    2.synchronized 无法判断获取锁的状态                    lock 可以判断是否获取到了锁
+    3.synchronized 会自动释放锁                            lock 手动释放锁   不释放就是死锁   手动释放更加安全
+    4.synchronized 线程1(获得锁,阻塞了)  线程2(死等)       lock 不一定会一直等待 tryLock方法
+    5.synchronized 默认可重入,不可中断,非公平              lock 默认可重入,可判断中断,非公平(可以自己设置)
+    6.synchronized 适合锁少量代码同步问题                  lock 适合锁大量的同步代码
+
+常用的辅助工具类类：
+    countDownLatch：
+阻塞队列：   一般在d多线程并发处理和线程池用到
+    1.当队列满了,不能继续存的时候需要阻塞.等待取出然后在存
+    2.当队列没有的时候,必须阻塞等待生产才能取
+阻塞队列对应的四组API         添加                 移除           查看队首元素
+    1.抛出异常                    add                 remove          element
+    2.不抛出异常，有返回值        offer                poll            peek
+    3.超时等待                    offer有参           poll有参
+    4.阻塞等待                    put                 take
+同步队列SynchronousQueue
+    进去一个元素，必须等待元素取出 才能继续存放元素
+    存   put   取  take
+顶级 collection --》queue---》blockingQueue
+    blockingQueue：阻塞队列   》》》一边存 另一边取
+    AbstractQueue：非阻塞队列
+    Deque：双端队列           》》》 两边都可以存取
+
+线程池： （池化技术）
+   原来程序的问题：  程序运行：本质：1.占用系统资源  2.线程的创建和销毁很消耗资源
+   解决：           事先准备好一些线程资源,有人要用就来拿,用来还回来
+   线程池好处：    1.线程复用  2.可以控制最大的线程数   3.方便管理线程
+线程池：三大方法   七大参数
+    1.Executors.newSingleThreadExecutor       //单个线程        //todo:和固定一样,允许请求队列长度为Integer.Max 会堆积大量请求->OOM
+    2.Executors.newFixedThreadPool(int值)     //创建一个固定大小的线程池
+    3.Executors.newCachedThreadPool()         //可伸缩的，遇强则强//todo 和下面一样,允许创建的线程数Integer.Max,会创建大量线程->OOM
+    4.Executors.newScheduledThreadPool()      //定时线程 延时3s处理    //todo   所以推荐使用ThreadPoolExecutor来创建线程池
+三种方法本质都是new ThreadPoolExecutor  这个方法的七个参数
+    1.corePoolSize                                       核心线程池大小(最小)
+    2.maximumPoolSize                                    最大线程池大小 (可伸缩的创建最大21亿  OOM内存溢出)
+    3.keepAliveTime                                      超时释放时间(超时没人调用,)
+    4.TimeUnit                                           时间单位 (上面超时时间的单位)
+    5.BlockingQueue<Runnable>                            阻塞队列
+    6.ThreadFactory                                      线程工厂，创建线程的,一般不用动
+    7.RejectedExecutionHandler                           拒绝策略
+    最大线程到底改如何定义？
+      1.CPU密集型：几核CPU就是允许最大线程    Runtime.getRuntime().availableProcessors()获取
+      2.IO密集型：判断程序中十分耗IO的线程, 只要大于这个数就行 一般两倍
+四种拒绝策略
+    1.new ThreadPoolExecutor.AbortPolicy()  //丢弃任务并抛出RejectedExecutionException异常。
+    2.new ThreadPoolExecutor.CallerRunsPolicy() //由调用线程处理该任务 【谁调用，谁处理】
+    3.new ThreadPoolExecutor.DiscardPolicy()   //也是丢弃任务，但是不抛出异常。
+    //当任务被拒绝添加时，会抛弃任务队列中最旧的任务也就是最先加入队列的，再把这个新任务添加进去。
+    //在rejectedExecution先从任务队列种弹出最先加入的任务，空出一个位置，然后再次执行execute方法把任务加入队列。
+    4.new ThreadPoolExecutor.DiscardOldestPolicy()
+
+-------------------
+常遇到的错误？
+1.内存溢出：线程池没有用ThreadPoolExecutor而用的Executors里的四种线程
+2.并发修改异常：多线程中集合读写
+3.队列满了 队列为空 ---》阻塞队列  解决方案 用offer 和 poll
+throwable
+  错误：非程序导致的问题。内存溢出
+  异常：运行时和非运行时(IO异常 SQL异常)
+当事务中包含try{}catch(Exception e){}代码块时 事务不会回滚 解决方法
+   1.在catch中 throw new RunTimeException    没有return  对前端不友好
+   2.在catch中 throw e                       没有return  对前端不友好
+   3.手动回滚   TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();       可以return  给前端展示正常状态码
+四大函数接口
+  1.lambda     解决了匿名内部类也就是new 接口时代码冗余的现象          JUC/lambda/LambdaExpressDemo.java
+  2.链式编程
+  3.函数式接口  @FunctionalInterface注解 里面必须只有一个抽象方法 可以有多个default,static方法及实现 JUC/lambda/LambdaExpressDemo.java
+     四大原生函数式接口
+        1.consumer：消费型接口 accept方法 有输入 没有返回
+        2.function：函数型接口 apply方法 传入参数T返回参数R
+        3.predicate: 断定型接口 test方法  输入一个参数  返回一个Boolean
+        4.supplier：供应型接口           没有输入 只有返回
+  4.Stream流式计算
+     大数据：存储 + 计算
+     存储：集合  mysql本质都是存储
+     计算：Stream
+ForkJoin
+  1.大数据量下,并行执行任务,提高效率.  (就是大数据中 Map Reduce的思想-》把大任务拆分小任务 然后将结果合并。归并思想)
+  特点：工作窃取 思想 。
+     当一个线程执行完 另一个线程还没有执行完的时候,他会把没执行完的任务偷过来执行 -》由此可见是一个双端队列
+异步通讯：future ：对未来的方法返回建模
+请你谈谈 volatlie的理解？
+   volatlie是java虚拟机提供的轻量级的同步机制
+        1.保证可见性
+        2.不保证原子性
+             线程A在执行任务的时候,不能被分割。要么同时成功要么同时失败
+        3.禁止指令重排
+             指令重排：你写的程序计算机并不是按这个顺序执行的   但是在指令重排的时候会考虑依赖性问题
+   volatlie 保证指令重排的原理
+             加了volatlie关键字 会在指令的上面和下面加一层内存屏障。作用就是禁止指令顺序交换
+      内存屏障。 CPU指令。 作用：
+            1.保证特定操作的执行顺序
+            2.可以保证某些变量的内存可见性（利用这写特性volatlie实现了可见）
+什么是JMM？ java内存模型,是一个不存在的东西。 是一种约定
+  关于JMM的关于同步的约定：
+        1.线程在解锁前：必须把线程的工作内存中的值刷新回主存
+        线程执行不是直接拿主存的变量执行,而是把变量拷贝过来操作.所以在解锁前需要把自己操作好的变量值刷新给主存
+        2.线程加锁前：必须读取主存中的最新值到线程的工作内存中
+        3.保证加锁和解锁是同一把锁。
+线程：  工作内存        主内存    涉及到8种操作  4组
+    1.lock     （锁定）：作用于主内存的变量，把一个变量标识为线程独占状态
+    2.unlock （解锁）：作用于主内存的变量，它把一个处于锁定状态的变量释放出来，释放后的变量才可以被其他线程锁定
+    3.read    （读取）：作用于主内存变量，它把一个变量的值从主内存传输到线程的工作内存中，以便随后的load动作使用
+    4.load     （载入）：作用于工作内存的变量，它把read操作从主存中变量放入工作内存中
+    5.use      （使用）：作用于工作内存中的变量，它把工作内存中的变量传输给执行引擎，每当虚拟机遇到一个需要使用到变量的值，就会使用到这个指令
+    6.assign  （赋值）：作用于工作内存中的变量，它把一个从执行引擎中接受到的值放入工作内存的变量副本中
+    7.store    （存储）：作用于主内存中的变量，它把一个从工作内存中一个变量的值传送到主内存中，以便后续的write使用
+    8.write 　（写入）：作用于主内存中的变量，它把store操作从工作内存中得到的变量的值放入主内存的变量中
+JMM对这八种指令的使用，制定了如下规则：
+    1.不允许read和load、store和write操作之一单独出现。即使用了read必须load，使用了store必须write
+    2.不允许线程丢弃他最近的assign操作，即工作变量的数据改变了之后，必须告知主存
+    3.不允许一个线程将没有assign的数据从工作内存同步回主内存
+    4.一个新的变量必须在主内存中诞生，不允许工作内存直接使用一个未被初始化的变量。就是怼变量实施use、store操作之前，必须经过assign和load操作
+    5.一个变量同一时间只有一个线程能对其进行lock。多次lock后，必须执行相同次数的unlock才能解锁
+    6.如果对一个变量进行lock操作，会清空所有工作内存中此变量的值，在执行引擎使用这个变量前，必须重新load或assign操作初始化变量的值
+    7.如果一个变量没有被lock，就不能对其进行unlock操作。也不能unlock一个被其他线程锁住的变量
+    8.对一个变量进行unlock操作之前，必须把此变量同步回主内存
+
+单例模式：
+    饿汉单例模式  1.私有构造器  2.自己new自己 3.提供外部获取实例接口
+         缺点    如果我这个单例模式里面开辟了其他空间。会造成资源浪费
+    懒汉式   1.私有构造器   2.给自己对象赋null值   3.提供外部获取实例接口。如果为空new自己
+     问题  多线程下实例不止出现一个  解决-》DCL 双检锁懒汉式
+
+
+
+各种锁的理解：
+    1.公平锁：非常公平 ，线程谁先来的谁限制性 不能插队
+    2.非公平锁：不公平锁可以插队。比如一个任务三个小时。后来一个3s可以执行完。为了效率就让他插队。synchronized使用非公平锁
+    3.可重入锁（递归锁）： 拿到了外面的锁就可以拿到(自动获得)里面的锁   所有的锁都是可重入锁。必须全部释放才行
+       可重入锁 synchronized和lock区别： synchronized是一把锁  lock是两把锁。外面的锁解外面 里面的锁解里面
+    4.自旋锁：cas底层就是自旋锁。如果条件成立交换 如果条件不成立就一直在循环里
+    5.死锁：
+    6.闭锁(减法计数器)
+    7.读写锁
+乐观锁？
+
+unsafe  native
+
+equals和==？
+   1.包装类推荐使用equals Integer包装类在-128~127直接是拿缓存里面的值,会复用对象。可以用==判断地址
+      超过这个值会在堆上产生新对象。所以推荐全部使用equals
+   2.equals
+   3.==
