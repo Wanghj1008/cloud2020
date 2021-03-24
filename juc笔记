@@ -35,6 +35,11 @@ condition 监视器
     5.Timed_Waiting 等多少秒就不等了
     6.Terminated  终止  代表执行完毕
 
+isAlive判断线程是否激活状态 (阻塞,运行)
+setPriority 设置优先级  也可以get获取优先级
+join：使主线程进入等待池,等调用方法执行完主线程继续往下执行
+interrput：中断线程   stop：停止线程
+yield：暂停正在运行的线程,运行其他线程运行。问题：有可能还是他获得现场
 wait和sleep的区别
     1.wait-----》Object                        sleep-------》thread
     2.          释放锁                                   不释放锁
