@@ -1,6 +1,5 @@
-
- Spring：轻量级框架,以IOC和AOP为核心
- 1.IOC低耦合高内聚2.AOP面向切面变成3.事务的控制4.方便集成测试5.方便集成其他优秀框架6.降低API使用难度,Spring对很多API进行封装提供Template
+Spring：轻量级框架,以IOC和AOP为核心
+1.IOC低耦合高内聚2.AOP面向切面变成3.事务的控制4.方便集成测试5.方便集成其他优秀框架6.降低API使用难度,Spring对很多API进行封装提供Template
 IOC控制反转：把对象的创建权交给Spring
 XML方式：
 Bean的配置：id自定义 class类的全路径名  init-method 初始化方法  destroy-method 销毁方法

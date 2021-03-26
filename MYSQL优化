@@ -23,13 +23,23 @@ MYSQL优化分析：
            10.日志分析工具mysqlDumpSlow：命令 mysqldumpslow --help
                 1.-s 排序方式  2.-c 访问次数  3.-l锁定时间  4.-r 返回记录 5.-t 查询时间 6.al 平均锁定时间
                 7.ar 平均返回记录数 8. at 平均查询时间 9.t 返回前面多少条数据 10.g 后面搭配正则表达式,大小写不敏感
-        2.sql_trace：
+        2.show profiles：     默认关闭,开启会保存最近15条SQL   show variables like 'profiling' 查看开启状态
+           1. show profiles   可以用来分析当前会话中语句执行的资源消耗情况
+           2.show profile for query 2;     可以根据query_ID查看具体的sql分析
+           3.show 【cpu,IO,ALL】 for query 2;     可以根据query_ID查看具体的sql分析
+                1.出问题的因素：  create tmp table  创建临时表
+                2.copy on tmp table on disk 把内存的临时表复制到磁盘
+                3.locked  锁了          4.converting heap to MyISAM  查询结果大,内存不够放 放进磁盘
+        3.全局查询日志：
+            mysql 配置文件中配置
+                1.开启 general_log=1
+                2.输出格式 log_output=file
+            sql语句实现
+                1.set global general_log = 1
+                2.set global log_output=table    此后所有的sql语句都会存到 general — —log 表中
+        4.sql_trace：
            1.一般是默认开启。
            2.我们可以设置跟踪开启,停止,可以查看跟踪信息.默认生成5个跟踪文件,重启或达到最大值(文件都满了)会重新生成.删除最早的文件
-        3.show profiles：  默认不开启
-           1. show profiles   查看当前会话以产生的所有记录
-           2.show profile for query 2;     可以根据query_ID查看具体的sql分析
-           3.show 【cpu,IO】 for query 2;     可以根据query_ID查看具体的sql分析
   三、数据库分表分库
   四、
   五、数据库读写分离
@@ -78,6 +88,7 @@ MYSQL优化分析：
             1.创建索引：create 【unique】 index  索引名  on   表(字段名)
             2.删除索引：drop  index  索引名  on  表名
             3.查看所有：show  index  from  表名
+            
   索引结构：
      1.BTree索引
             1.3层的B+数可以表示上百万条数据。所以最高需要三次IO。提高查询性能
@@ -206,3 +217,47 @@ Order by优化：
     开启了binlog日志,mysql默认不允许创建函数。 将默认开启
     show variables like 'log_bin_trust_function_creators'
     SET GLOBAL log_bin_trust_function_creators = 1;
+锁： 协调多线程访问数据的机制
+    1.从数据操作类型分
+        1.读锁：共享锁
+            1.当A给一个表加读锁.A可以读这个表不能修改这个表也不能读其他表。而B可以读这个表但是修改这个表会被堵塞。一直到A解锁
+        2.写锁：排它锁
+            1.A加写锁。A可以读这个表也可以修改这个表。但是不能查询或操作其他表。B不能查询或操作被锁的表。但可以操作其他
+    2.从s数据操作粒度来分
+        1.行锁：偏写
+            2.索引失效会导致行锁变成表锁
+        2.表锁：偏读
+        3.页锁：
+            开销和加锁时间介于行表锁之间。会出现死锁。并发度一般
+    3.SQL命令：
+        1.查看加没加锁 。 show  open tables；看 IN——use这个如果0没有锁
+        2.加锁  lock table 表名 【read||write】
+        3.解锁  unlock tables   所有表解锁
+        4.show status like 'table%'   通过这个分析系统上的表锁定。
+            1.tables_locks_immediate:产生表级锁定的次数。表示可以立即获取锁的查询次数。每次增加1
+            2.table_locks_waited：出现表级锁定争用而发生的等待次数。这个值高说明存在严重的表锁争抢情况
+        6.如何锁定一行：  begin；  select * from user where id = 8 for update ； 取消锁定commit；
+        7.如何分析行锁定： show status like ‘innodb_row_lock%’
+            1.innodb_row_lock_current_waits:当前正在等待锁定的数量
+            2.innodb_row_lock_time:从系统启动到现在锁定总时间长度
+            3.当等待次数很高并且等待总时长也不小的时候。就需要分析看看什么问题
+        5.间隙锁
+            1.当用范围条件检索数据,INNODB会给f符合条件的数据记录加速,对于键值在条件范围内但是b不存在的叫做间隙
+            2.也会对这个间隙加锁
+            危害：造成锁定使无法插入键值在范围内的任何数据。降低性能
+    3.建议
+        1.尽可能让数据检索都通过索引完成,不然会升级为表锁
+        2.合理设计索引《尽量减少表范围
+        3.尽可能减小条件《避免间隙锁
+        4.尽量控制事务大小《减小锁定资源量和时间长度
+        5.尽可能降低事务级别
+    4.MYISAM在执行查询前,会自动给涉及的所有表加读锁,在执行增删改前会自动加写锁
+                (偏向INNODB存储引擎,开销大,加锁慢,会出现死锁,锁定粒度小,发生所冲突的概率低《并发度高)
+
+        1.MYISAM对表加读锁，不会影响其他线程对表的读操作。但会阻塞其他线程对表的写操作
+        2.MYISAM对表加写锁,会阻塞其他线程对表的读写操作
+        3.MYISAM读写锁调度是写锁优先,会使查询堵塞
+    5.INNODB  使用索引条件的使用行锁  否则表锁
+                (偏向MYISAM存储引擎,开销小,加锁块,无死锁,锁定粒度大,发生锁冲突概率高《并发度最低)
+
+        1.读几之所写(自己写的自己可以立马读。。别人必须在我commit后才能读)
