@@ -1,14 +1,5 @@
 package juc;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
-
 /**
  * @author 王昊杰
  * @Program: openflatform
@@ -16,11 +7,14 @@ import java.util.concurrent.locks.ReentrantLock;
  * @date 2021032021/3/10 11:13
  */
 public class Foo {
+    public static void main(String[] args) {
 
+    }
 }
 
 class Test {
     public static void main(String[] args) {
+        System.out.println("1111");
        /* Foo f= new Foo();
 
         new Thread(()->{
@@ -57,4 +51,5 @@ class Test {
         System.out.println(a.replaceFirst("a", "b"));
         return i2;
     }
+
 }

@@ -1,7 +1,7 @@
 package juc.BlockingQueue;
 
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 同步队列
@@ -23,7 +23,9 @@ public class SynchronousQueueTest  {
         }, "A").start();
         new Thread(() -> {
             try {
+                TimeUnit.SECONDS.sleep(3);
                 System.out.println(Thread.currentThread().getName()+">>>>>"+synchronousQueue.take());
+                TimeUnit.SECONDS.sleep(3);
                 System.out.println(Thread.currentThread().getName()+">>>>>"+synchronousQueue.take());
                 System.out.println(Thread.currentThread().getName()+">>>>>"+synchronousQueue.take());
             } catch (InterruptedException e) {

@@ -1,7 +1,5 @@
 package juc.lock;
 
-import jdk.nashorn.internal.ir.CallNode;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -35,7 +33,7 @@ public class ReadWriteLock {
 
 class MyCache {
     ReentrantReadWriteLock readWriteLock = new ReentrantReadWriteLock();
-    volatile Map<String, String> map = new HashMap<>();
+     Map<String, String> map = new HashMap<>();
 
     public void get(String key) {
         readWriteLock.readLock().lock();

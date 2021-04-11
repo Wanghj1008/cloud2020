@@ -11,7 +11,7 @@ DQL：查询
 DML：操作
         insert  into from user () values ()
         update user set username=?
-        delete from user where               和 truncate删除
+        delete from user where               和 truncate 删除
             1.                              效率高
             2.  有返回值                     没有返回值
             3.新增从断点开始                  新增从1开始

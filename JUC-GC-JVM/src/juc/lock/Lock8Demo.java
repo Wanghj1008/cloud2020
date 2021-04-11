@@ -1,8 +1,6 @@
 package juc.lock;
 
 
-import java.util.concurrent.TimeUnit;
-
 class Phone {
     public   synchronized  void sendSMS() throws Exception {
         System.out.println("*******************sendSMS");
@@ -61,8 +59,6 @@ public class Lock8Demo {
          },"B").start();*/
 
         /**   2.     邮件方法暂停4s，请问先打印邮件还是短信？  邮件
-         *
-         *
          *          只要在一个资源类里面 不管他有多少个同步方法
          *          只要一个线程先访问了资源类里面的任何一个同步方法 那么该方法所在的资源类将被锁定
          *         那么该方法所在的资源类将被锁定  被锁定后其他线程也不能进入其他 synchronized方法
