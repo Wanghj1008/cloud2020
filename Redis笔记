@@ -77,7 +77,7 @@ String类型               ：点赞。浏览量
   setex name 30 “whj”：相当于set name “whj”+expire name 30
   setnx(SET if Not eXists)：如果不存在进行set存在返回失败0.而set是覆盖
   mset:批量设置多个值 mset k1 v1 k2 v2 k3 v3       mget:批量获取多个key:mget k1 k2 k3
-  msetnx:如果存在设置多个值。如果存在覆盖,不存在插入
+  msetnx:如果存在设置多个值。一个重复则全部失败。
   getset：先get值然后又set
 List类型(列表)     Redis中List类型可以用来当成栈、(消息队列)队列、双端队列、阻塞队列   头尾操作效率高。中间效率低
   lpush list1 1 2 3 4 5:将1-5从左边压入   rpush list2 1 2 3 4 5:将1-5从右边压入
@@ -126,8 +126,32 @@ Redis事务操作：
   错误类型：编译错误   运行错误   本条运行错误不影响其他运行。但是语法在编译报错则整体报错。 没有隔离性
   开启事务 multi    语句。。。。。    exec执行事务。   discard 取消事务
 
+Watch 监控事务：
+  watch命令可以决定事务会回滚还是提交。在事务multi开启之前开启watch监控一些键值对。exec提交的时候检查。键值对没有被其他线程修改
+  则提交事务,如果值被修改,则回滚事务。 乐观锁的思想,类似于判断版本。和多线程中CAS的原子引用的乐观锁类似。
+  开启：  watch key    取消1.事务exec执行完毕。无论成功失败监控都取消 2.客户端推出 3.手动unwatch 取消
+Jedis：使用Java来操作redis,官方推荐java连接redis工具。相当于连接redis的中间件
+  new Jedis()参数：ip 端口号 可选：ssl 超时时间       jedis.close()//关闭连接
+整合Spring boot：
+  Jedis：采用直连,多个线程操作是不安全的,避免不安全,加入jedis pool连接池，更像BIO模式
+  netty:采用netty,实例可以在多个线程间共享,不存在线程不安全,可以减少线程数，更像NIO模式
+  redisTemplate.opsForValue();//操作String类型  opsForList//操作list   opsForset//操作set
+  redisTemplate.getConnectionFactory.getConnertion()//获取连接对象。结果可以进行 flushdb 和 flushall
+---------------------------------------------------------------------------------------------
+序列化： 任何存储,传输都需要进行序列化,只不过数据库内部已经解决了.在插入的时候进行序列化.在取出来的时候进行解析,而redis内部并没有
+解决,redis的value是byte array字节数组。所以需要将数据结构转成字节数组。而字符串几乎就是字节数组,所以不需要转换
+  序列化：把对象转化为可传输的字节序列(字节数组)过程称为序列化。
+  反序列化：把字节序列(字节数组)还原为对象的过程称为反序列化。
+  方式：JDK（不支持跨语言）、JSON、XML    技术选型关键点 1.序列化速度 2.序列化字节数组大小
+  JAVA序列化中常见的问题: 问题一：static 属性不能被序列化
+  原因：序列化保存的是对象的状态，静态变量属于类的状态，因此 序列化并不保存静态变量。
+  问题二：Transient 属性不会被序列化   短暂的属性
+  问题三：序列化版本号serialVersionUID  当对象有改动但是版本号一样。不会影响序列化和反序列化。只不过最新的改动会失效
+  每个对象必须有版本号，如果没定义会自动生成,自动生成的版本号只要对象有改动就会变更,变更用户就需要更新版本。因此建议手动设置
 
 
+
+单线程多线程  事务特性    百度Redis乐观锁高并发秒杀    setex分布式锁
 
 
 
