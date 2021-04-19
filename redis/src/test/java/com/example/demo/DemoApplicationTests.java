@@ -27,10 +27,14 @@ class DemoApplicationTests {
 	}
 
 	@Test
+	/**
+	 * 测试序列化
+	 */
 	void test(){
 		User user = new User("whj", 20);
 		redisTemplate.opsForValue().set("user", user);
 		System.out.println(redisTemplate.opsForValue().get("user"));
 	}
+
 
 }
