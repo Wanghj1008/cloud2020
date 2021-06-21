@@ -1,5 +1,6 @@
 ps ef|grep 关键词：查看是否运行    kill 线程号杀掉进程
-vim ：编辑文本   esc退出编辑。打开命令  :wq (shift+z+z):保存退出   :q:不保存退出
+vim ：编辑文本 ：set nu 显示行号  esc退出编辑。打开命令  :wq (shift+z+z):保存退出   :q:不保存退出
+cp -r Mycat /usr/local：递归拷贝文件夹
 mkdir :创建文件夹
 rz：从桌面复制文件到服务器   sz：从服务器复制文件到桌面
 :%s/7001/7002/g    :全局替换7001-》7002
@@ -11,5 +12,10 @@ find /home -name test：查找home目录下的所有文件,名称为test        
 find /home -name test：查找home目录下的所有文件,名称为test忽略大小写
 find / -type d -name test：在/目录中查找名称为test的所有目录
 find -type f -name *.php:查找目录中所有 .php文件
+6个不需要./在任意位置都可以启动的文件夹   bin  usr/bin  user/local/bin  sbin  usr/sbin  user/local/sbin
+
+firewall-cmd --add-port=223/tcp --permanent    添加永久开放的端口（例如：223端口）
+firewll-cmd --remove-port=80/tcp --permanent    关闭永久端口
 -------------------------------------------------------------
 Redis安装   解压 make 修改配置文件  启动 redis-server 配置文件
+ssh  scp redis-6.2.1.tar.gz root@192.168.47.128     home/whj/桌面
