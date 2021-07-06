@@ -227,3 +227,7 @@ DESC  表名 显示结构
     语法：   CREATE TRIGGER 名称
        {BEFORE|AFTER} {INSERT|DELETE|UPDATE} ON 表名
        FOR EACH ROW 执行相应的sql   表示每一行都会执行
+MVCC多版本并发控制：
+   并发读写数据库时,可能出现数据不一致,加锁虽然可以解决但是降低了读写性能,innodb中实现MVCC类似于copyonwrite,采用乐观
+   锁的方式,保存数据的历史版本,通过比较版本号决定数据是否显示出来
+   解决：读写锁相互阻塞问题  降低死锁,只有写操作时锁定对应行

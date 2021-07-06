@@ -1,0 +1,28 @@
+四大函数接口
+1.lambda     解决了匿名内部类也就是new 接口时代码冗余的现象          JUC/lambda/LambdaExpressDemo.java
+2.链式编程
+3.函数式接口  @FunctionalInterface注解 里面必须只有一个抽象方法 可以有多个default,static方法及实现 JUC/lambda/LambdaExpressDemo.java
+   四大原生函数式接口
+      1.consumer：消费型接口 accept方法 有输入 没有返回
+      2.function：函数型接口 apply方法 传入参数T返回参数R
+      3.predicate: 断定型接口 test方法  输入一个参数  返回一个Boolean
+      4.supplier：供应型接口           没有输入 只有返回
+4.Stream流式计算
+   定义：只是进行数据的处理,并不存储,从A端进入管道,进行排序,筛选等操作从另一端输出就类似于流,可以传入集合,数组数据
+   以前都是迭代器或者foreach循环遍历,现在使用流内部迭代数据,内部通过访问者模式实现
+     访问者模式：我需要一个对象的内部数据做处理,但是不想改变原有对象,解决方案就是类似于创建一个访问者类,就不需要在原有类上面操作。
+   1.parallelStream和Stream  生成串行流和并行流
+   2.forEach：迭代流中数据      3.filter：过滤元素              4.limit：指定数量
+   5.sorted：排序              6.distinct：去重               7.map映射每个元素进行相应操作
+   8.Collectors：数据合并,返回集合或者字符串
+5.新的事件处理API：之前的util.data都是可变的,线程不安全
+   LocalDate/LocalTime ：now方法获取现在时间
+6.提供了Base64编码解码
+单点登录主要作用：在一个系统登录一次,就可以无需登录直接访问其他多个系统
+   使用一级域名来共享cookie,二级域名区分系统   将所有系统的用户抽出来放到认证中心,所有的注册登录认证都来认证中心做
+   1.用户浏览器访问A系统,发现没有登录,就将他重定向到认证中心,将用户的浏览器输入链接也发送到认证中心
+   2.认证中心发现没有登录,让用户进行登录。 1.创建共享session  2.创建认证中心cookie 3.重定向回用户链接携带cookie的ticket
+   3.A系统携带ticket继续认证,判断是否有效,如果认证中心确认是自己的ticket.将创建的session发送回系统 。完成登录
+   4.如果其他系统接入,因为本地有认证中心的ticket,可以跳过第一步,直接携带ticket访问,然后认证中心确认后将session返回
+中介者模式：
+  实现中介者接口，定义一个 List 来管理同事对象，协调各个同事角色之间的交互关系

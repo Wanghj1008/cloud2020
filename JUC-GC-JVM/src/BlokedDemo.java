@@ -88,7 +88,7 @@ public class BlokedDemo {
     public static void main(String[] args) {
         BlokedDemo blokedDemo = new BlokedDemo();
         new Thread(() -> {
-            for (int i = 0; i < 100; i++) {
+            for (int i = 0; i < 10; i++) {
                 try {
                     blokedDemo.demeA();
                 } catch (InterruptedException e) {
@@ -97,7 +97,7 @@ public class BlokedDemo {
             }
         }, "A").start();
         new Thread(() -> {
-            for (int i = 0; i < 100; i++) {
+            for (int i = 0; i < 10; i++) {
                 try {
                     blokedDemo.demeB();
                 } catch (InterruptedException e) {
@@ -106,7 +106,7 @@ public class BlokedDemo {
             }
         }, "B").start();
         new Thread(() -> {
-            for (int i = 0; i < 100; i++) {
+            for (int i = 0; i < 10; i++) {
                 try {
                     blokedDemo.demeC();
                 } catch (InterruptedException e) {
@@ -115,7 +115,7 @@ public class BlokedDemo {
             }
         }, "C").start();
         new Thread(() -> {
-            for (int i = 0; i < 100; i++) {
+            for (int i = 0; i < 10; i++) {
                 blokedDemo.demeD();
 
             }

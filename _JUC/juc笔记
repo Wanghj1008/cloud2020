@@ -52,8 +52,7 @@ synchronized和lock区别
     5.synchronized 默认可重入,不可中断,非公平              lock 默认可重入,可判断中断,非公平(可以自己设置)
     6.synchronized 适合锁少量代码同步问题                  lock 适合锁大量的同步代码
 
-常用的辅助工具类类：
-    countDownLatch：
+
 阻塞队列：   一般在d多线程并发处理和线程池用到
     1.当队列满了,不能继续存的时候需要阻塞.等待取出然后在存
     2.当队列没有的时候,必须阻塞等待生产才能取
@@ -106,19 +105,7 @@ throwable
    1.在catch中 throw new RunTimeException    没有return  对前端不友好
    2.在catch中 throw e                       没有return  对前端不友好
    3.手动回滚   TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();       可以return  给前端展示正常状态码
-四大函数接口
-  1.lambda     解决了匿名内部类也就是new 接口时代码冗余的现象          JUC/lambda/LambdaExpressDemo.java
-  2.链式编程
-  3.函数式接口  @FunctionalInterface注解 里面必须只有一个抽象方法 可以有多个default,static方法及实现 JUC/lambda/LambdaExpressDemo.java
-     四大原生函数式接口
-        1.consumer：消费型接口 accept方法 有输入 没有返回
-        2.function：函数型接口 apply方法 传入参数T返回参数R
-        3.predicate: 断定型接口 test方法  输入一个参数  返回一个Boolean
-        4.supplier：供应型接口           没有输入 只有返回
-  4.Stream流式计算
-     大数据：存储 + 计算
-     存储：集合  mysql本质都是存储
-     计算：Stream
+
 ForkJoin
   1.大数据量下,并行执行任务,提高效率.  (就是大数据中 Map Reduce的思想-》把大任务拆分小任务 然后将结果合并。归并思想)
   特点：工作窃取 思想 。
@@ -168,6 +155,14 @@ JMM对这八种指令的使用，制定了如下规则：
      问题  多线程下实例不止出现一个  解决-》DCL 双检锁懒汉式
 
 
+
+AQS： AbstractQueuedSynchronized 是一个同步框架,内部维护的FIFO的双向队列
+  voliate修饰的 state 用于标志是否持有锁  如果获取同步状态失败,会将线程等待信息构建成一个Node放入队列,阻塞线程。当线程将
+  同步状态state释放,将队列中的首节唤醒,获取state
+Node：  内部参数(共享还是独占、状态(超时,就绪,等待状态,)、前驱后继节点)
+常用的辅助工具类类：
+    countDownLatch：
+    信号量：用于保证并发访问线程数量  提供获取和释放方法
 
 各种锁的理解：
     1.公平锁：非常公平 ，线程谁先来的谁限制性 不能插队

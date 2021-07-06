@@ -1,6 +1,6 @@
 package juc.FunctionalInterface;
 
-import jdk.nashorn.internal.ir.CallNode;
+//import jdk.nashorn.internal.ir.CallNode;
 
 import java.util.function.Function;
 
