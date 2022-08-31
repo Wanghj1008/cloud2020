@@ -2,6 +2,9 @@ package sort;
 
 public class QuickSort {
 
+	/**
+	 * 先写 减法后写加  不然会出现问题
+	 */
 	private static void quickSort(int[] array, int low, int high) {
 		if (null == array || array.length < 2|| low>=high) {
 			return ;

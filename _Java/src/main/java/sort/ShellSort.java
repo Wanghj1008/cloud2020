@@ -9,6 +9,9 @@ public class ShellSort {
 		}
 	}
 
+	/**
+	 * 希尔排序：直接插入排序的升级版
+	 */
 	public static void sort(int[] array) {
 		int j;
 		int count=0;
