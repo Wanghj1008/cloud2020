@@ -1,0 +1,52 @@
+Spring： 开源的轻量级框架,简化应用程序开发,降低耦合度。
+    IOC(控制反转):让Spring帮助创建对象以及管理对象之间的依赖关系,降低对象间耦合度
+    AOP(切面编程):
+
+SpringMVC：
+    拦截用户请求,DispatcherServlet承担中介职责将用户请求通过HandlerMapping去匹配controller,然后controller执行具体操作
+
+Mybatis：
+    是对jdbc的封装,通过配置文件关联到实体类Mapper文件,mapper中配置 sql的映射。每次交互中通过sqlSessionFactory拿到一个sqlSession，再执行sql命令
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
