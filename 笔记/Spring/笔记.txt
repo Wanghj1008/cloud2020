@@ -1,23 +1,6 @@
-XML方式：
-ApplicationContext.getBean两种方式 一种通过id   一种通过字节码文件。。如果bean注入两次通过字节码会报错。无法判断要哪个
-  实例化三种： 无参构造                 <bean id="userDao" calss="com.whj.dao.UserDao"/>
-                需要现有一个StaticFactory类 然后里面有一个静态的getUserDao方法
-              工厂静态方法             <bean id="userDao" class="com.whj.dao.StaticFactory" factory-method="getUserDao"/>
-                需要现有一个StaticFactory类 然后里面有一个getUserDao方法   这样就不能直接类名.方法调用 需要先实例创建StaticFactory
-              工厂实例方法             <bean id="factory" calss="com.whj.dao.StaticFactory"/>
-                                      <bean id="userDao" factory-bean="factory" factory-method="getUserDao"/>
-request：web项目中，Spring创建一个Bean的对象，将对象存放到request域中
-session：web项目中，Spring创建一个Bean的对象，将对象存放到session域中
-global session：web项目中，应用在Portlet环境,如果没有这个环境,那么相当于session
-依赖注入：
-    set方法注入
-    有参构造注入
-    P指针注入：一般还是用set因为这个多了很长不好看
+
 引入其他文件：<import resource="aaalication-dao.xml"/>
 注解方式：
-@Autowired:直接去寻找类型的bean但是如果相同类型bean有多个会出错。不知道要哪个
-@qualifier("id"):根据id去容器寻找一样的bean 但是需要配合Autowired一起使用
-@Resource:相当于Autowired+qualifier
 @ComponentScan:指定扫描包
 @import:配置文件加载其他分支配置文件
 @propertyResource：用于加载.properties的文件

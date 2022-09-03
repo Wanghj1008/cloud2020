@@ -16,7 +16,7 @@ public class Test {
     public static void main(String[] args) {
         File configFile = new File("E:/a.txt");
         WatchMonitor watchMonitor = WatchMonitor.create(configFile, WatchMonitor.ENTRY_MODIFY, WatchMonitor.ENTRY_CREATE);
-        watchMonitor.setWatcher(new DelayWatcher(new ServerConfigWatcher(), 200));
+//        watchMonitor.setWatcher(new DelayWatcher(new ServerConfigWatcher(), 200));
         watchMonitor.start();
 
 //        change(new int[]{1});
