@@ -1,8 +1,4 @@
-Spring：轻量级框架,以IOC和AOP为核心
-1.IOC低耦合高内聚2.AOP面向切面变成3.事务的控制4.方便集成测试5.方便集成其他优秀框架6.降低API使用难度,Spring对很多API进行封装提供Template
-IOC控制反转：把对象的创建权交给Spring
 XML方式：
-Bean的配置：id自定义 class类的全路径名  init-method 初始化方法  destroy-method 销毁方法
 ApplicationContext.getBean两种方式 一种通过id   一种通过字节码文件。。如果bean注入两次通过字节码会报错。无法判断要哪个
   实例化三种： 无参构造                 <bean id="userDao" calss="com.whj.dao.UserDao"/>
                 需要现有一个StaticFactory类 然后里面有一个静态的getUserDao方法
@@ -10,9 +6,6 @@ ApplicationContext.getBean两种方式 一种通过id   一种通过字节码文
                 需要现有一个StaticFactory类 然后里面有一个getUserDao方法   这样就不能直接类名.方法调用 需要先实例创建StaticFactory
               工厂实例方法             <bean id="factory" calss="com.whj.dao.StaticFactory"/>
                                       <bean id="userDao" factory-bean="factory" factory-method="getUserDao"/>
-scope作用范围
-singleton：单例    如果是单例则在加载xml配置文件时,bean就被创建  只要Spring容器在对象就一直活着，容器销毁对象才销毁
-prototype：多例    如果是多例则在加载xml配置文件时不创建bean。getBean的时候才创建,get一次创建一个 只要对象在使用就活着,长时间不使用会被GC回收
 request：web项目中，Spring创建一个Bean的对象，将对象存放到request域中
 session：web项目中，Spring创建一个Bean的对象，将对象存放到session域中
 global session：web项目中，应用在Portlet环境,如果没有这个环境,那么相当于session
@@ -28,6 +21,7 @@ global session：web项目中，应用在Portlet环境,如果没有这个环境,
 @ComponentScan:指定扫描包
 @import:配置文件加载其他分支配置文件
 @propertyResource：用于加载.properties的文件
+
 
 整合junit：
 @RunWith("SpringJunit4ClassRunner.class")
