@@ -40,9 +40,9 @@ Spring： 开源的轻量级框架,简化应用程序开发,降低耦合度。
             3.init-method 初始化方法
             4.destroy-method 销毁方法
         Bean实例化方式
-            1.无参构造
-            2.工厂静态方法
-            3.工厂实例方法
+            1.无参构造：<bean id="bean1" class="demo3.Bean1">
+            2.工厂静态方法： <bean id="bean2" class="demo3.Bean2Factory" factory-method="getBean2">
+            3.工厂实例方法： <bean id="bean3Factory" class="demo3.Bean3Factory"> <bean id="bean3" factory-bean="bean3Factory" factory-method="getBean3">
         依赖注入： 优点:将对象的依赖关系交给容器自动化完成,解耦合    缺点：实例bean源码复杂,不易学习。 通过反射创建对象有损耗,但是从便利性和实用性这点损耗可以忽略
             1.构造方法：优点：自动寻找bean进行注入 缺点：可能存在多个构造方法,不方便维护。 但是IDEA仍然推荐这种方法进行代码书写(优点：保证依赖不为空避免空指针)  如果一个依赖有多种实现推荐使用set注入
             2.setter方法：优点：可以继承、设置默认值、用的时候进行注入  缺点：无法在对象构造完成后立刻使用 需要调用set方法  可以搭配Required注解强制要求使用者注入该属性
@@ -59,7 +59,7 @@ Spring： 开源的轻量级框架,简化应用程序开发,降低耦合度。
             7.Component:等同于application.xml,通过ClassPathXmlApplicationContext加载
             8.Repository|Service|Controller:DAO、业务层、控制层特殊的注解,作用和Component相同
             9.Configuration和Component区别：
-                官方解释：1.加载方式不同   2.Configuration会进行cglib代理(简化就是获取bean 一种获取到的是代理对象  一种获取到的原始对象)
+                官方解释：1.加载方式不同   //todo 2.Configuration会进行cglib代理(简化就是获取bean 一种获取到的是代理对象  一种获取到的原始对象)
     2.AOP(切面编程): 代码重复部分抽出来,通过动态代理技术在不改变源码基础上进行代码增强  常用于：权限控制、日志处理、事务等
         1.相关注解
             1.Aspect：切面
@@ -80,8 +80,8 @@ Spring： 开源的轻量级框架,简化应用程序开发,降低耦合度。
     4.方便集成测试
     5.降低API使用难度,对很多API进行封装提供Template调用
 单例多例模式下线程安全问题：
-   单例：方法局部变量、ThreadLocal是线程安全的,但是全局变量(普通变量和对象)、静态变量存在线程不安全情况
-   多例：每次创建一个新对象,不存在多线程共享一个Bean。所以ThreadLocal、局部变量、全局变量(普通变量)都是线程安全的、只有全局变量(对象类型)、静态变量存在线程不安全情况
+   单例：方法局部变量、ThreadLocal是线程安全的,但是全局变量、静态变量存在线程不安全情况
+   多例：每次创建一个新对象,不存在多线程共享一个Bean。所以ThreadLocal、局部变量、全局变量都是线程安全的、静态变量存在线程不安全情况
    为什么Spring中controller、service、dao却线程安全？
        答：因为通常情况下我们都是调用他们内部的方法,对于JVM虚拟机栈来说是线程私有的,不涉及线程安全问题。
 代理模式：
@@ -94,16 +94,24 @@ Spring： 开源的轻量级框架,简化应用程序开发,降低耦合度。
            1.JDK代理是JAVA原生提供的,JDK8性能提高很多而且写起来方便,但是只能对接口进行增强   CGLib都可以进行增强,Spring提供的还需要引入ASM.jar,基于ASM(字节码操控框架)实现
            2.JDK代理直接编译生成字节码加载到JVM而CGLIB使用ASM效率较低,但是执行方法JDK使用反射而CGLIB使用FastClass为代理类和被代理类各一个类,通过index确定调用方法  整体：CGLIB速度快
            3.JDK代理对接口处理,所以不支持私有、保护、final。接口支持static但是没有实现方法不能代理    CGLIB创建子类方式：所以私有、保护、final、static等方法也不可代理
+本来可以new对象,为什么要使用Spring IOC呢？
+   1.主要好处就是bean的集中管理,降低耦合度  其次Spring提供了一整套Bean的生命周期管理,对于方法增强也有AOP处理
 Spring Bean： 生命周期
-     1.没有Spring管理通过JVM管理的对象,生命周期只有 实例化创建  然后垃圾回收销毁
-     2.Spring管理的的对象生命周期
-         1.实例化(Instantiation):
-               1.BeanFactory :是在使用到Bean的时候才会实例化Bean
-               2.ApplicantContext: 管理的Bean在容器初始化的时候就回完成Bean实例化
-         2.属性赋值 Populate
-         3.初始化 Initialization
-         4.销毁 Destruction
-
+    1.Spring启动时会扫描注解/XML/JavaConfig把需要管理的bean封装成BeanDefinition对象,然后统一放到beanDefinitionMap中,key就是beanName值就是BeanDefinition
+    2.BeanFactoryPostProcessor 工厂后置处理器可以对Bean元数据进行修改,XML占位符就是他的子类注入进去的,一般用的比较少。 敏感数据比如密码之类的可以在这一层进行解密使用
+    3.InstantiationAwareBeanPostProcessor 感知Bean实例化处理器 父类是BeanPostProcessor。 通过AbstractAutowireCapableBeanFactory#createBean触发执行
+        触发机制：Bean实例化之前会检查是否存在该接口,并触发下述1接口,1接口任何一个返回非null都会导致生命周期缩短
+        1.postProcessBeforeInitialization: 在Bean实例化方法之前执行.
+            1.返回值决定后续实例化是否执行，如果返回空继续执行后续实例化等方法,如果返回AOP代理对象,生命周期会缩短,只执行postProcessAfterInitialization完成Bean加载,也不继续执行销毁方法
+        2.postProcessAfterInstantiation：在bean实例化之后,初始化之前执行
+            1.当前Bean结果返回true或false会直接影响当前Bean后续3是否执行,各Bean之间互不影响
+        3.postProcessProperties：上述第二步结果为true才会执行,用于给Bean属性赋值
+        4.postProcessPropertyValues: 已经被标注@Deprecated，Spring5.1被postProcessProperties取代。
+    4.
+    1.理解JAVA对象和Spring对象的区别
+        java对象创建对象是使用堆中的类对象(只描述了类基本信息)作为模板创建  Spring创建的是一个BeanDefinition(包含了对象信息,增加了作用域、参数等信息)
+    //todo 注解和配置文件配置初始化和销毁 执行顺序不一样
+    //todo InstantiationAwareBeanPostProcessor设计主要给基础性框架使用，日常应用spring推荐使用适配器类InstantiationAwareBeanPostProcessorAdapter。
 
 
 
