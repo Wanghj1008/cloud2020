@@ -14,9 +14,7 @@
     <bean id="foodService" class="proxy.FoodServiceImpl"/>
     <bean id="aopMain" class="proxy.AopMain"/>
 
-    <bean id="user1Bean" class="spring.生命周期.User1Bean">
-        <property name="name" value="你看啥"/>
-    </bean>
+
     <!--生命周期相关Bean配置   Start-->
     <bean id="userBean" class="spring.生命周期.UserBean" init-method="myInit" destroy-method="myDestroy">
         <!-- 构造函数注入 -->
@@ -26,6 +24,9 @@
         <!-- setter方法注入 -->
         <property name="id" value="2"/>
         <property name="name" value="riemann"/>
+    </bean>
+    <bean id="user1Bean" class="spring.生命周期.User1Bean">
+        <property name="name" value="你看啥"/>
     </bean>
 
     <!--生命周期相关Bean配置   end-->

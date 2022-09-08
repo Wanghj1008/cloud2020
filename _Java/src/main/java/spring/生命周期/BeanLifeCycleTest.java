@@ -8,6 +8,7 @@ public class BeanLifeCycleTest {
 	public static void main(String[] args) {
 		ApplicationContext applicationContext = new ClassPathXmlApplicationContext("application.xml");
 		UserBean user = (UserBean) applicationContext.getBean("userBean");
+//		user.setBeanName("das");
 		((AbstractApplicationContext) applicationContext).close();
 	}
 }

@@ -46,7 +46,7 @@ public class UserBean implements InitializingBean, BeanNameAware, DisposableBean
 
 	@Override
 	public void setBeanName(String name) {
-		System.out.println("6. 调用 BeanNameAware.setBeanName() 方法");
+		System.out.println("6. 调用 BeanNameAware.setBeanName("+name+") 方法");
 	}
 
 	@Override

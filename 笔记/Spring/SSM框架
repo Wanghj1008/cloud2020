@@ -100,19 +100,28 @@ Spring Bean： 生命周期
     1.Spring启动时会扫描注解/XML/JavaConfig把需要管理的bean封装成BeanDefinition对象,然后统一放到beanDefinitionMap中,key就是beanName值就是BeanDefinition
     2.BeanFactoryPostProcessor 工厂后置处理器可以对Bean元数据进行修改,XML占位符就是他的子类注入进去的,一般用的比较少。 敏感数据比如密码之类的可以在这一层进行解密使用
     3.InstantiationAwareBeanPostProcessor 感知Bean实例化处理器 父类是BeanPostProcessor。 通过AbstractAutowireCapableBeanFactory#createBean触发执行
-        触发机制：Bean实例化之前会检查是否存在该接口,并触发下述1接口,1接口任何一个返回非null都会导致生命周期缩短
-        1.postProcessBeforeInitialization: 在Bean实例化方法之前执行.
+        触发机制：Bean实例化之前会检查是否存在该接口,并触发下述1接口,1接口任何一个返回非null都会导致当前Bean生命周期缩短
+        1.postProcessBeforeInstantiation: 在Bean实例化方法之前执行.  如果返回null就会执行doCreateBean进行实例化(内部有一个方法判断如果不存在构造或者多个构造的匹配方案)
             1.返回值决定后续实例化是否执行，如果返回空继续执行后续实例化等方法,如果返回AOP代理对象,生命周期会缩短,只执行postProcessAfterInitialization完成Bean加载,也不继续执行销毁方法
-        2.postProcessAfterInstantiation：在bean实例化之后,初始化之前执行
+            2.作用就是替换普通实例化Bean,主要应用与框架层面,使用代理类替换普通类。 如果是我们日常业务中想要替换Bean,Spring提供了一个适配器类InstantiationAwareBeanPostProcessorAdapter
+        2.postProcessAfterInstantiation：在bean实例化之后,初始化之前执行. 当前该Bean可能部分属性还没有设置值
             1.当前Bean结果返回true或false会直接影响当前Bean后续3是否执行,各Bean之间互不影响
-        3.postProcessProperties：上述第二步结果为true才会执行,用于给Bean属性赋值
+        3.postProcessProperties：上述第二步结果为true,并且有一个check方法为true 的时候才会执行。是两个条件,可以给Bean属性赋值,也可以对xml的注入参数做修改
         4.postProcessPropertyValues: 已经被标注@Deprecated，Spring5.1被postProcessProperties取代。
-    4.
+    4.上述3如果没有缩短生命周期,接下来就执行Set依赖注入
+    5.依赖注入之后,初始化之前可以在目标Bean上实现一些感知方法,ApplicationContextAware、BeanNameAware、BeanFactoryAware、BeanClassLoaderAware等获取相应信息
+    6.BeanPostProcessor
     1.理解JAVA对象和Spring对象的区别
-        java对象创建对象是使用堆中的类对象(只描述了类基本信息)作为模板创建  Spring创建的是一个BeanDefinition(包含了对象信息,增加了作用域、参数等信息)
+        1.java对象创建对象是使用堆中的类对象(只描述了类基本信息)作为模板创建
+        2.Spring创建的BeanDefinition(包含了作用域,构造传入值和set传入值,初始化方法名、销毁方法名,如果是工厂类型实例还会有工厂名和工厂方法名)
     //todo 注解和配置文件配置初始化和销毁 执行顺序不一样
-    //todo InstantiationAwareBeanPostProcessor设计主要给基础性框架使用，日常应用spring推荐使用适配器类InstantiationAwareBeanPostProcessorAdapter。
-
+BeanFactory和ApplicationContext有什么区别？
+    1.ApplicationContext是BeanFactory的一个子接口,所以ApplicationContext可以理解为是BeanFactory基础上的一个增强
+        1.ApplicationContext:采用一次性加载  优点：1.如果配置错误启动就会报错 2.运行过程中速度快,因为不涉及太多加载 缺点：一次性加载太多比较吃内存,首次加载很慢
+            加载：ClassPathXmlApplicationContext
+            增强1.MessageSource 国际化  2.ResourceLoader资源访问(绝对路径相对路径处理)  3.AOP增强
+        2.BeanFactory：懒加载  优点：首次运行速度快 缺点:配置错误只有访问时候才能发现,而且过程中可能涉及加载影响速度
+            加载：XmlBeanFactory
 
 
 

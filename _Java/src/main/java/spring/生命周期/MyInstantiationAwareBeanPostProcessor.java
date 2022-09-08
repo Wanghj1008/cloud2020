@@ -1,6 +1,7 @@
 package spring.生命周期;
 
 import org.springframework.beans.BeansException;
+import org.springframework.beans.PropertyValue;
 import org.springframework.beans.PropertyValues;
 import org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessor;
 import org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessorAdapter;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
 public class MyInstantiationAwareBeanPostProcessor implements InstantiationAwareBeanPostProcessor {
     @Override
     public Object postProcessBeforeInstantiation(Class<?> beanClass, String beanName) throws BeansException {
+
         if ("userBean".equals(beanName) ||"user1Bean".equals(beanName) ) {
             System.out.println("1. 调用 InstantiationAwareBeanPostProcessor.postProcessBeforeInstantiation() 方法");
 //			return new UserBean(); //Bean生命周期只执行一次 任何一个代理对象都会导致生命周期缩短
