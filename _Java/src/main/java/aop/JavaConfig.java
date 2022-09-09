@@ -1,10 +1,10 @@
-package proxy;
+package aop;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.context.annotation.Import;
+import proxy.FoodServiceImpl;
 
 /**
  * @author 王昊杰
@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Import;
 @EnableAspectJAutoProxy
 @ComponentScan
 @Configuration
-@Import({MyAspect.class,FoodServiceImpl.class})
+@Import({MyAspect.class, FoodServiceImpl.class})
 public class JavaConfig {
 
 

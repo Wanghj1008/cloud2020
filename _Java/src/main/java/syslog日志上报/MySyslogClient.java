@@ -1,4 +1,4 @@
-package syslogTest;
+package syslog日志上报;
 
 import org.graylog2.syslog4j.Syslog;
 import org.graylog2.syslog4j.SyslogConstants;

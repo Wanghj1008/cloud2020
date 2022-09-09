@@ -1,9 +1,9 @@
-package proxy;
+package aop;
 
-import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-import org.springframework.web.context.support.XmlWebApplicationContext;
+import proxy.CglibProxyFactory;
+import proxy.FoodService;
+import proxy.FoodServiceImpl;
 
 /**
  * @author 王昊杰
