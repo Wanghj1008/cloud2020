@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 @Component
 @EnableAspectJAutoProxy
 public class MyAspect {
-    @Pointcut("execution(public * *(..))")
+    @Pointcut("execution(public * proxy.FoodServiceImpl.makeChicken())")
     public void divPointCut() {
         System.out.println("11");
     }
@@ -32,7 +32,7 @@ public class MyAspect {
 
     @AfterReturning("divPointCut()")
     public void afterReturningNotify() {
-        System.out.println("----===>> @AfterReturning 我是前置通知");
+        System.out.println("----===>> @AfterReturning 我是最终通知");
     }
 
     @AfterThrowing("divPointCut()")
@@ -42,10 +42,15 @@ public class MyAspect {
 
     @Around("divPointCut()")
     public Object around(ProceedingJoinPoint proceedingJoinPoint) throws Throwable {
-        Object retVal;
-        System.out.println("----===>> @Around 环绕通知之前 AAA");
-        retVal = proceedingJoinPoint.proceed();
-        System.out.println("----===>> @Around 环绕通知之后 BBB");
+        Object retVal =new Object();
+        try {
+            System.out.println("----===>> @Around 环绕通知之前 AAA");
+            retVal = proceedingJoinPoint.proceed();
+            System.out.println("----===>> @Around 环绕通知之后 BBB");
+        } catch (Throwable throwable) {
+            System.out.println("----===>> @Around 环绕通知之后 CCC");
+            throw throwable;
+        }
         return retVal;
     }
 }
