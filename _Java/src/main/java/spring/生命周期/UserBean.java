@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
-//@Component
+@Component
 public class UserBean implements InitializingBean, BeanNameAware, DisposableBean, ApplicationContextAware {
 	private int id;
 
@@ -53,7 +53,7 @@ public class UserBean implements InitializingBean, BeanNameAware, DisposableBean
 	public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
 		UserBean userBean = (UserBean) applicationContext.getBean("userBean");
 		System.out.println(userBean);
-		System.out.println("7. 调用 BeanNameAware.setBeanName() 方法");
+		System.out.println("7. 调用 BeanNameAware.setApplicationContext() 方法");
 	}
 
 	@Override
@@ -61,6 +61,7 @@ public class UserBean implements InitializingBean, BeanNameAware, DisposableBean
 		System.out.println("9. 调用 InitializingBean.afterPropertiesSet() 方法");
 	}
 
+	@PostConstruct
 	public void myInit() {
 		System.out.println("10. 调用 init-method 方法");
 	}
@@ -70,6 +71,7 @@ public class UserBean implements InitializingBean, BeanNameAware, DisposableBean
 		System.out.println("12. 调用 DisposableBean.destroy() 方法");
 	}
 
+	@PreDestroy
 	public void myDestroy() {
 		System.out.println("13. 调用 destroy-method 方法");
 	}

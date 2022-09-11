@@ -102,7 +102,7 @@ Spring： 开源的轻量级框架,简化应用程序开发,降低耦合度。
    1.主要好处就是bean的集中管理,降低耦合度  其次Spring提供了一整套Bean的生命周期管理,对于方法增强也有AOP处理
 Spring Bean： 生命周期
     1.Spring启动时会扫描注解/XML/JavaConfig把需要管理的bean封装成BeanDefinition对象,然后统一放到beanDefinitionMap中,key就是beanName值就是BeanDefinition
-    2.BeanFactoryPostProcessor 工厂后置处理器可以对Bean元数据进行修改,XML占位符就是他的子类注入进去的,一般用的比较少。 敏感数据比如密码之类的可以在这一层进行解密使用
+    2.BeanFactoryPostProcessor 工厂后置处理器可以对Bean元数据进行修改,XML占位符就是他的子类注入进去的,一般用的比较少。 敏感数据比如密码之类的可以在这一层进行解密使用  Configuration注解类的加载成beanDefinitionMap
     3.InstantiationAwareBeanPostProcessor 感知Bean实例化处理器 父类是BeanPostProcessor。 通过AbstractAutowireCapableBeanFactory#createBean触发执行
         触发机制：Bean实例化之前会检查是否存在该接口,并触发下述1接口,1接口任何一个返回非null都会导致当前Bean生命周期缩短
         1.postProcessBeforeInstantiation: 在Bean实例化方法之前执行.  如果返回null就会执行doCreateBean进行实例化(内部有一个方法判断如果不存在构造或者多个构造的匹配方案)
@@ -113,12 +113,42 @@ Spring Bean： 生命周期
         3.postProcessProperties：上述第二步结果为true,并且有一个check方法为true 的时候才会执行。是两个条件,可以给Bean属性赋值,也可以对xml的注入参数做修改
         4.postProcessPropertyValues: 已经被标注@Deprecated，Spring5.1被postProcessProperties取代。
     4.上述3如果没有缩短生命周期,接下来就执行Set依赖注入
-    5.依赖注入之后,初始化之前可以在目标Bean上实现一些感知方法,ApplicationContextAware、BeanNameAware、BeanFactoryAware、BeanClassLoaderAware等获取相应信息
-    6.BeanPostProcessor
-    1.理解JAVA对象和Spring对象的区别
-        1.java对象创建对象是使用堆中的类对象(只描述了类基本信息)作为模板创建
-        2.Spring创建的BeanDefinition(包含了作用域,构造传入值和set传入值,初始化方法名、销毁方法名,如果是工厂类型实例还会有工厂名和工厂方法名)
-    //todo 注解和配置文件配置初始化和销毁 执行顺序不一样
+    5.依赖注入之后,初始化之前可以在目标Bean上实现一些感知方法   具体回调方式如下两种
+        1.invokeAwareMethods中通过判断类型直接进行回调的方法 例如:BeanNameAware、BeanFactoryAware、BeanClassLoaderAware
+        2.通过BeanPostProcessor#postProcessBeforeInitialization方法实现的 例如：ApplicationContextAware
+        问题：为什么之前在方法内,后面采用BeanPostProcessor方式实现回调？
+             这个我也不太清楚,可能是Spring升级 采用修改关闭,扩展开放原则所以采用扩展方式添加！！！   加载顺序：第一种先执行回调.
+    6.BeanPostProcessor：初始化阶段,实际初始化阶段和5(感知回调)都在初始化Bean中完成,执行顺序  invokeAwareMethods->下1->上2->下2
+        1.postProcessBeforeInitialization：调用初始化方法之前执行,Spring一些感知方法的回调就是通过这个执行的！
+        2.postProcessAfterInitialization:调用初始化方法之后执行,
+    7.生命周期接口
+        1.InitializingBean:自定义初始化执行的时候都会进行感知方法回调,所以可以对前面获取的对象放心使用。 还可以通过注解,XML配置实现完成配置！执行顺序不重要,都是初始化一般不会写多个！！
+        2.DisposableBean:自定义销毁方法执行！容器关闭,调用close就可以触发
+1.理解JAVA对象和Spring对象的区别
+    1.java对象创建对象是使用堆中的类对象(只描述了类基本信息)作为模板创建
+    2.Spring创建的BeanDefinition(包含了作用域,构造传入值和set传入值,初始化方法名、销毁方法名,如果是工厂类型实例还会有工厂名和工厂方法名)
+BeanPostProcessor 注册时机与执行顺序?那么Spring是如何保证BeanPostProcessor在我们的业务Bean之前初始化完成呢？
+    1.源码中对他提供的和我们自己写的Bean做了划分,加载的时候也是先注册 BeanPostProcessor(Bean后置处理器) 然后才会对单例非懒加载的Bean进行注册
+    2.每种类型中执行顺序又可以通过实现类进行加载排序   1.PriorityOrdered   2.Ordered   3.什么都不加    执行顺序按照123执行。 内部优先级越小越早执行
+三级缓存： doCreateBean中采用三级缓存解决循环依赖问题 //todo 看完AOP最后总结一次循环依赖问题 三级缓存
+    一级缓存(singletonObjects)：存放的是所有创建好的单例Bean
+    二级缓存(earlySingletonObjects)：完成实例化，但是还未进行属性注入及初始化的对象
+    三级缓存(singletonFactories)：提前暴露的一个单例工厂.拿到的是一个工厂对象,通过它实例对象每次可能都不一样！！！Bean就不是单例了
+        解决:二级缓存中存储的就是从这个工厂中获取到的对象实例。 当使用三级缓存getObject获取就会移除三级缓存放入二级缓存
+    流程:
+        当A完成构造方法调用,将Bean放入三级缓存,进行属性注入时候发现B没有被加载,所以进行B的创建,B创建时候发现要注入A,尝试一级缓存获取\二级获取,最后从三级缓存拿到一个没有初始化完全的Bean
+        然后B完成依赖注入和初始化操作后将B放入一级缓存,继续返回A中注入B完成依赖注入和初始化,最后将A放入一级缓存。 因为B拿到A是一个引用,所以最终B中的A也是一个初始化完全的Bean
+    循环依赖不支持情况？   1.放入三级缓存的前提是执行了构造方法,所以构造器的循环问题不能解决   2.
+Spring循环依赖如何解决？
+    1.首先区分Spring中出现循环依赖是什么情况
+        1.AOP代理对象产生循环依赖
+            1.使用@Lazy注解，延迟加载    2.使用@DependsOn注解，指定加载先后关系     3.修改文件名称，改变循环依赖类的加载顺序
+        2.DependsOn产生循环依赖
+            只能取消注解让它不出现循环依赖
+        3.多例循环依赖
+            因为多例情况下不走缓存,所以只能变成单例解决
+        4.单例构造器循环依赖
+            1..使用@Lazy注解，延迟加载   2.先加载的构造器改为Set注入
 BeanFactory和ApplicationContext有什么区别？
     1.ApplicationContext是BeanFactory的一个子接口,所以ApplicationContext可以理解为是BeanFactory基础上的一个增强
         1.ApplicationContext:采用一次性加载  优点：1.如果配置错误启动就会报错 2.运行过程中速度快,因为不涉及太多加载 缺点：一次性加载太多比较吃内存,首次加载很慢
