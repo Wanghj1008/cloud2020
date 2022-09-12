@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 
 @Aspect
 @Component
-@EnableAspectJAutoProxy
+@EnableAspectJAutoProxy(proxyTargetClass = true)
 public class MyAspect {
     @Pointcut("execution(public * proxy.FoodServiceImpl.makeChicken())")
     public void divPointCut() {
