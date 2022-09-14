@@ -1,7 +1,5 @@
 SpringMVC：
     拦截用户请求,DispatcherServlet承担中介职责将用户请求通过HandlerMapping去匹配controller,然后controller执行具体操作
-Mybatis：
-    是对jdbc的封装,通过配置文件关联到实体类Mapper文件,mapper中配置 sql的映射。每次交互中通过sqlSessionFactory拿到一个sqlSession，再执行sql命令
 
 架构分层：
     1.视图层：视图层和控制层结合紧密,视图层主要是页面的展示
@@ -196,10 +194,44 @@ BeanFactory和ApplicationContext有什么区别？
             加载：XmlBeanFactory
         3.FactoryBean:工厂Bean,使用工厂模式,提供工厂方法来实例化Bean！
 
+-----------------------------------------------------------------------------------------------
+Mybatis：持久层框架,可以将参数映射到配置的SQL进行执行,结果集映射成Java对象返回！
+    优点：1.相比于JDBC减少冗余代码  2.SQL写到XML与程序分离,使用灵活耦合度低
+         3.底层使用JDBC连接数据库,只有JDBC支持的数据库Mybatis都支持,但是XML中的语法要符合对应数据库规范
+         4.支持对象与数据库字段关系映射(ORM)
+    缺点：1.关联表、字段多时比较复杂   2.SQL依赖于数据库,切换数据库移植性差
+MyBatis和Hibernate的区别
+    1.Mybatis需要手动编写SQL,并且对象和数据库字段需要手动配置映射,工作量稍微大些但是性能比Hibernate强,二级缓存出现脏数据不会提示报错
+    2.Hibernate 不需要编写大量SQL,并且数据库字段和对象自动映射,出现脏数据会报错,不同数据库可移植性性高
+    场景：Mybatis适合大型互联网相互,性能高   Hibernate适合对性能要求不太高的后台管理系统之类的
+#{}和${}区别
+    1.${}占位符,所以会发生字符串替换,没有预编译所以替换后可能产生SQL注入问题      使用场景：ORDER BY ${id} 如果使用#{id}会解析成"id"写法有误   表名等！
+    2.#{}替换成？号,按字符串处理,提前对SQL进行编译,后赋值避免编译时产生SQL注入
+    预编译的作用：1.预编译可以将多次操作合成一次,并且可以直接执行   2.预编译后产生的PreparedStatement会有缓存下次可以直接使用
+为什么要使用三级缓存？ 减少读取数据库操作,提高效率
+    一级缓存(默认开启)：也叫本地缓存,作用范围只能在同一个SqlSession。  HashMap无容量限制
+        1.缓存的key是一个CacheKey对象,由分页偏移量(默认0),条数(默认Inter.Max),SQL语句,传入参数等传入到一个UpdateList<Object>中
+        2.通过CacheKey查询缓存,获取不到进行数据库查询。 查询之前先给存一次,value为空enum  查询之后将key进行删除   将结果重新put进去
+    一级缓存清空： BaseExecutor#query方法可知！
+        1.配置文件配置flushCache=true属性,会进行缓存清空。 相当于没得缓存
+        2.MyBatis全局配置属性localCacheScope配置为Statement时，那么完成一次查询就会清除缓存。   还可以配置成Session,不会清理
+        3.执行增删改操作会清空一级缓存
+    一级缓存缺点： 由于缓存不能跨会话,不同会话可能有不同缓存,脏数据问题！ 所以建议设置本地缓存作用域为 Statement不使用Session 或者开启二级缓存
 
+    二级缓存：开启二级缓存 1.CacheEnable=true 2.Mapper中加入<cache/>  用来解决一级缓存不能跨会话问题  HashMap无容量限制
+    二级缓存注意点：
+        1.二级缓存开启后对于实体类需要实现Serializable接口,因为二级缓存不一定只存在内存中,也可能放硬盘里！所以取得时候需要反序列化
+        2.需要事务commit之后才会生效 (两次查询中间如果有更新 但是未提交会走缓存。 提交后才会清空缓存)
+            如果未提交会存在临时的Map中,只有当commit的时候才会转移到真正二级缓存的Map！防止脏读
+    二级缓存流程：
+        1.创建一级缓存Key   2.通过Key查询二级缓存   3.如果没有查询数据,一级缓存流程   4.将结果放入临时二级缓存   5.commit方法移入到真正二级缓存中
+    二级缓存场景
+        1.因为增删改都会清空二级缓存,所以只适合读多写少的清空开启   2.二级缓存针对nameSpace,建议单表操作的Mapper使用！
 
-
-
+    三级缓存(自定义缓存)：Mybatis官方提供redis  解决一级缓存和二级缓存脏读的问题、并且可以多应用之间使用
+        1.自定义一个缓存类实现Cache接口,重写对于存取方法即可！
+    三级缓存需要Mybatis操作存取,不是Spring容器,不能直接注入RedisTemplate,如何拿到的RedisTemplate对象呢？
+        RedisTemplate可以通过applicationAware注入application进行getBean
 
 
 
