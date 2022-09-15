@@ -232,10 +232,18 @@ MyBatis和Hibernate的区别
         1.自定义一个缓存类实现Cache接口,重写对于存取方法即可！
     三级缓存需要Mybatis操作存取,不是Spring容器,不能直接注入RedisTemplate,如何拿到的RedisTemplate对象呢？
         RedisTemplate可以通过applicationAware注入application进行getBean
-
-
-
-
+Mybatis的四种分页
+    1.Limit关键字实现  优点：灵活性高  缺点：实现复杂,数据量大效率低！
+    2.RowBounds类实现逻辑分页(一次性获取所有结果集,业务层进行分页。 不推荐没人使用)   优点:写法比limit简单  缺点：一次性查询所有,占内存
+    3.PageHelper第三方插件实现分页
+        原理：内部实现一个拦截器,业务代码中设置PageHelper的页数和条数实际添加到了ThreadLocal中,拦截器拦截到SQL判断ThreadLocal是否有分页信息进行SQL的limit的拼接查询。最后清楚ThreadLocal
+        注意事项：因为PageHelper使用的ThreadLocal和线程绑定,所以需要设置完分页参数就进行数据库查询！ 内部会清理本地变量。 如果中间增加很多业务代码可能导致不安全情况！
+            不安全情况说明：如果业务代码后没有进行数据库查询继续执行,因为本地变量没有清空可能会导致当前线程的其他查询方法进行了分页处理！导致业务异常。   可以手动finally增加清理分页参数
+Mybatis延迟加载原理(懒加载)
+    好处：先从单表查询,需要时再从关联表查询,提高数据库性能！因为单表比关联查询速度快
+    缺点：需要用到数据才进行查询,数据量大的情况下接口响应时间长
+    操作过程：再ResultMap中可以配置Lazy属性和对应查询SQL！ 当业务层访问懒加载数据时动态代理被触发通过SqlSession执行嵌套SQL。但是当数据返回到控制层如果再去访问延迟数据就会报错！因为sqlSession
+    sqlSession生命周期：
 
 
 
