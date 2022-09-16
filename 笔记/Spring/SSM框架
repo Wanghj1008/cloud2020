@@ -249,9 +249,33 @@ Mybatis都有哪些Executor执行器？  可以通过配置选择具体的执行
     2.ReuseExecutor：维护一个Map缓存,相同SQL会复用Statement
     3.BatchExecutor：可以对增删改进行批处理,但是配置上不仅仅只是设置执行器,还有其他配置操作！  底层手动开启事务 然后SQL到批处理中  最后批量执行所有SQL  提交事务
 Mybatis动态SQL
-    在XML中可以通过逻辑判断完成对SQL拼接,如if、where、foreach等！
-Mybatis核心组件
-
+    在XML中可以通过逻辑判断完成对SQL拼接,如if、where、foreach标签等！
+    1.构建SqlSessionFactory对象时会解析mapper.xml文件,根据不同SQL标签生成不同MappedStatement对象存放到Map中(总结加载所有Mapper文件)
+    2.遍历主标签里所有节点生成SQLNode(SQL子节点对象). 执行query方法时,首先通过key查询Map然后获取sqlNode。
+    3.sqlSourceParser.parse()进行#{}或${}替换、sqlNode.apply方法进行动态SQL拼接
+Mybatis
+    1.XMLConfigBuilder
+        通过configLocation属性加载所有xml文件,加载配置文件(二级缓存、驼峰处理、事务工厂、延迟加载配置等)！ 内部会对配置文件继续解析处理
+    2.XMLMapperBuilder
+        解析所有XML文件
+    3.XMLStatementBuilder
+        解析单个文件中每个节点 如：select,insert,update,delete节点。产生的数据增加到Configuration的mappedStatements中。
+    4.XMLScriptBuilder
+        解析xml中各个节点sql部分的Builder。
+Spring整合Mybatis源码流程
+    1.Spring整合Mybatis的时候首先要配置一个SqlSessionFactoryBean,这个工厂Bean中可以注入数据源、mybatis参数配置文件、XML文件位置
+        1.实现InitializingBean:启动会执行初始化方法,内部执行了构建工厂Bean方法
+        2.FactoryBean：通过getObject获取Bean。内部对SqlSessionFactory获取如果为空执行构建工厂Bean方法
+        3.ApplicationListener：可以对事件进行监听。当前方法在Spring加载完之后执行,判断Mybatis是否加载成功
+    2.buildSqlSessionFactory(构建工厂Bean方法)
+        1.构建XMLConfigBuilder对象,通过configLocation加载配置文件(插件、setting配置、环境配置、Mapper.xml文件)封装进Configuration中
+            1.Mapper.xml解析支持两种类型子节点  1.整个包节点(通过配置的包别名内部反射加载)  2.单个Mapper节点(区分属性 1.resource  2.url  3.class)
+                1.包节点找到对应包下面所有的接口,然后根据接口创建一个代理工厂,放到了configuration的注册mapper中
+                2.执行
+                总结： 1.mapper.xml注入可以通过单个文件或者整个包注入
+            2.解析XML文件,将nameSpace中所有标签分别处理(resultMap、cache、增删改查等),其中对增删改查子节点使用XMLStatementBuilder封装到mappedStatements中
+            3.SQL语句被封装到SqlSource对象,动态SQL和静态SQL实现类不同。完成SQL的拼接！  最后将封装好的Configuration传入SQLSessionFactoryBuild的构造方法,生成默认的sqlSessionFactory对象
+    3.工程构建内部
 ---------------------------------------------------------------------------------------------
 
 

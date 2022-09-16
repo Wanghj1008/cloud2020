@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mabatis.org//DTD Maooer 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="spring.mybatis.mapper.UserMapper">
+
+    <resultMap id="BaseResultMap" type="spring.mybatis.model.User">
+        <id column="id" property="id" jdbcType="INTEGER"/>
+        <id column="name" property="name" jdbcType="VARCHAR"/>
+        <id column="age" property="age" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <select id="selectList" resultMap="BaseResultMap">
+        select * from `user`
+    </select>
+</mapper>

@@ -34,11 +34,11 @@
     <!--生命周期相关Bean配置   end-->
 
     <!-- 开启spring对事务的注解支持 -->
-    <tx:annotation-driven transaction-manager="txAdvice"/>
+ <!--   <tx:annotation-driven transaction-manager="txAdvice"/>
     <bean id="txAdvice" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
         <property name="dataSource" ref="dataSource"/>
     </bean>
-
+-->
     <!--引入database.properties文件、配置数据源连接-->
     <context:property-placeholder location="classpath:database.properties"/>
 
@@ -49,5 +49,11 @@
         <property name="url" value="${url}"/>
         <property name="username" value="${sm.user}"/>
         <property name="password" value="${sm.password}"/>
+    </bean>
+
+    <bean class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="mapperLocations" value="mapper/*.xml"/>
+        <property name="dataSource" ref="dataSource"/>
+        <property name="configLocation" value="mybatis-config.xml"/>
     </bean>
 </beans>
