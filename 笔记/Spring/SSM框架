@@ -201,22 +201,18 @@ Mybatis：持久层框架,可以将参数映射到配置的SQL进行执行,结�
          4.支持对象与数据库字段关系映射(ORM)
     缺点：1.关联表、字段多时比较复杂   2.SQL依赖于数据库,切换数据库移植性差
 MyBatis和Hibernate的区别
-    1.Mybatis需要手动编写SQL,并且对象和数据库字段需要手动配置映射,工作量稍微大些但是性能比Hibernate强,二级缓存出现脏数据不会提示报错
-    2.Hibernate 不需要编写大量SQL,并且数据库字段和对象自动映射,出现脏数据会报错,不同数据库可移植性性高
+    1.Mybatis需要手动编写SQL并且需要手动配置数据库字段和对象映射关系。Hibernate不需要编写SQL只需要操作对象！耦合度低,因为不需要编写SQL所以移植性高
+    2.Mybatis支持动态SQL,并且能进行SQL优化。  Hibernate全自动映射 性能慢,不能SQL优化！
     场景：Mybatis适合大型互联网相互,性能高   Hibernate适合对性能要求不太高的后台管理系统之类的
-#{}和${}区别
-    1.${}占位符,所以会发生字符串替换,没有预编译所以替换后可能产生SQL注入问题      使用场景：ORDER BY ${id} 如果使用#{id}会解析成"id"写法有误   表名等！
-    2.#{}替换成？号,按字符串处理,提前对SQL进行编译,后赋值避免编译时产生SQL注入
-    预编译的作用：1.预编译可以将多次操作合成一次,并且可以直接执行   2.预编译后产生的PreparedStatement会有缓存下次可以直接使用
-为什么要使用三级缓存？ 减少读取数据库操作,提高效率
-    一级缓存(默认开启)：也叫本地缓存,作用范围只能在同一个SqlSession。  HashMap无容量限制
+为什么要使用三级缓存？ 减少读取数据库操作,提高效率.一般项目中都会使用redis缓存,一级二级基本不怎么使用 所以没了解二级缓存回收策略
+    一级缓存(默认开启)：也叫会话缓存  HashMap无容量限制
         1.缓存的key是一个CacheKey对象,由分页偏移量(默认0),条数(默认Inter.Max),SQL语句,传入参数等传入到一个UpdateList<Object>中
         2.通过CacheKey查询缓存,获取不到进行数据库查询。 查询之前先给存一次,value为空enum  查询之后将key进行删除   将结果重新put进去
     一级缓存清空： BaseExecutor#query方法可知！
-        1.配置文件配置flushCache=true属性,会进行缓存清空。 相当于没得缓存
+        1.配置文件配置flushCache=true属性,会进行缓存清空。但是也会把二级缓存清空
         2.MyBatis全局配置属性localCacheScope配置为Statement时，那么完成一次查询就会清除缓存。   还可以配置成Session,不会清理
         3.执行增删改操作会清空一级缓存
-    一级缓存缺点： 由于缓存不能跨会话,不同会话可能有不同缓存,脏数据问题！ 所以建议设置本地缓存作用域为 Statement不使用Session 或者开启二级缓存
+    一级缓存缺点： 不同会话可能存在脏数据！ 所以建议设置本地缓存作用域为 Statement不使用Session 或者开启二级缓存
 
     二级缓存：开启二级缓存 1.CacheEnable=true 2.Mapper中加入<cache/>  用来解决一级缓存不能跨会话问题  HashMap无容量限制
     二级缓存注意点：
@@ -224,7 +220,7 @@ MyBatis和Hibernate的区别
         2.需要事务commit之后才会生效 (两次查询中间如果有更新 但是未提交会走缓存。 提交后才会清空缓存)
             如果未提交会存在临时的Map中,只有当commit的时候才会转移到真正二级缓存的Map！防止脏读
     二级缓存流程：
-        1.创建一级缓存Key   2.通过Key查询二级缓存   3.如果没有查询数据,一级缓存流程   4.将结果放入临时二级缓存   5.commit方法移入到真正二级缓存中
+        1.通过缓存执行器先创建一级缓存Key,通过Key查询二级缓存,没数据进入具体执行器走一级缓存流程,最后将结果放入临时二级缓存！ 当方法提交后移入真正的二级缓存
     二级缓存场景
         1.因为增删改都会清空二级缓存,所以只适合读多写少的清空开启   2.二级缓存针对nameSpace,建议单表操作的Mapper使用！
 
@@ -244,38 +240,58 @@ Mybatis延迟加载原理(懒加载)
     缺点：需要用到数据才进行查询,数据量大的情况下接口响应时间长
     操作过程：再ResultMap中可以配置Lazy属性和对应查询SQL！ 当业务层访问懒加载数据时动态代理被触发通过SqlSession执行嵌套SQL。但是当数据返回到控制层如果再去访问延迟数据就会报错！因为sqlSession
     sqlSession生命周期： 一次sqlSession相当于一个数据库连接,就当事务注解存在的时候,当业务层代码执行完毕就应该关闭连接！ 所以当controller访问拦截在就会报错,无法使用代理执行嵌套SQL
-Mybatis都有哪些Executor执行器？  可以通过配置选择具体的执行器！！作用范围都是一个sqlSession
-    1.SimpleExecutor(默认)：执行数据库操作前，每次都会新建一个statement，然后执行数据库操作。
-    2.ReuseExecutor：维护一个Map缓存,相同SQL会复用Statement
-    3.BatchExecutor：可以对增删改进行批处理,但是配置上不仅仅只是设置执行器,还有其他配置操作！  底层手动开启事务 然后SQL到批处理中  最后批量执行所有SQL  提交事务
-Mybatis动态SQL
-    在XML中可以通过逻辑判断完成对SQL拼接,如if、where、foreach标签等！
-    1.构建SqlSessionFactory对象时会解析mapper.xml文件,根据不同SQL标签生成不同MappedStatement对象存放到Map中(总结加载所有Mapper文件)
-    2.遍历主标签里所有节点生成SQLNode(SQL子节点对象). 执行query方法时,首先通过key查询Map然后获取sqlNode。
-    3.sqlSourceParser.parse()进行#{}或${}替换、sqlNode.apply方法进行动态SQL拼接
-Mybatis
-    1.XMLConfigBuilder
-        通过configLocation属性加载所有xml文件,加载配置文件(二级缓存、驼峰处理、事务工厂、延迟加载配置等)！ 内部会对配置文件继续解析处理
-    2.XMLMapperBuilder
-        解析所有XML文件
-    3.XMLStatementBuilder
-        解析单个文件中每个节点 如：select,insert,update,delete节点。产生的数据增加到Configuration的mappedStatements中。
-    4.XMLScriptBuilder
-        解析xml中各个节点sql部分的Builder。
-Spring整合Mybatis源码流程
+Spring装载Mybatis流程
     1.Spring整合Mybatis的时候首先要配置一个SqlSessionFactoryBean,这个工厂Bean中可以注入数据源、mybatis参数配置文件、XML文件位置
         1.实现InitializingBean:启动会执行初始化方法,内部执行了构建工厂Bean方法
         2.FactoryBean：通过getObject获取Bean。内部对SqlSessionFactory获取如果为空执行构建工厂Bean方法
-        3.ApplicationListener：可以对事件进行监听。当前方法在Spring加载完之后执行,判断Mybatis是否加载成功
+        3.ApplicationListener：容器刷新的时候更新SqlSessionFactory！！Spring的refresh
     2.buildSqlSessionFactory(构建工厂Bean方法)
-        1.构建XMLConfigBuilder对象,通过configLocation加载配置文件(插件、setting配置、环境配置、Mapper.xml文件)封装进Configuration中
-            1.Mapper.xml解析支持两种类型子节点  1.整个包节点(通过配置的包别名内部反射加载)  2.单个Mapper节点(区分属性 1.resource  2.url  3.class)
-                1.包节点找到对应包下面所有的接口,然后根据接口创建一个代理工厂,放到了configuration的注册mapper中
-                2.执行
-                总结： 1.mapper.xml注入可以通过单个文件或者整个包注入
-            2.解析XML文件,将nameSpace中所有标签分别处理(resultMap、cache、增删改查等),其中对增删改查子节点使用XMLStatementBuilder封装到mappedStatements中
-            3.SQL语句被封装到SqlSource对象,动态SQL和静态SQL实现类不同。完成SQL的拼接！  最后将封装好的Configuration传入SQLSessionFactoryBuild的构造方法,生成默认的sqlSessionFactory对象
-    3.工程构建内部
+        1.构建XMLConfigBuilder对象,加载configLocation配置文件(插件、setting配置、环境配置、Mappers)封装进Configuration中
+            1.对配置文件参数的获取封装到Configuration中,用到可以跟代码看默认值或可选项有哪些进行查阅资料！ 核心就是下面加载Mappers
+            2.mappers可以通过两种方式配置。 加载Mappers核心就是 1.二级缓存标签的配置  2.封装MappedStatement对象
+                1.package：通过包路径获取所有xml的CRUD标签进行MappedStatement封装
+                2.mapper：属性可以选择 1.resource   2.class   3.url  {因为这种单一注入、一般不常使用}
+                3.通过XMLStatementBuilder封装MappedStatement对象 (MappedStatementID是namespace+id)
+                    1.参数类型(ParameterType)  2.SqlSource生成  3.ResultMap
+                MappedStatement作用
+                    1.Executor执行器执行SQL前将输入的java对象映射到SQL中.相当于JDBC中preparedStatement对参数的设置！
+                    2.SQL执行结果映射回java对象,相当于JDBC中对结果集循环处理封装对象的过程！
+    3.MappedStatement属性中SqlSource接口的封装 调用createSqlSource进行创建
+        1.使用XmlScriptBuilder对SQL进行解析,判断是否属于动态SQL  条件： 1.SQL中包含动态标签   2.SQL中包含${}符
+        2.通过判断是否为动态SQL为SqlSource创建不同的实现类  1.动态SQL实现类DynamicSqlSource    2.静态SQL实现类RawSqlSource 内部最终使用了StaticSqlSource
+Mybatis执行流程源码
+    1.Spring加载Mybatis之后会创建一个DefaultSqlSessionFactory。通过DefaultSqlSessionFactory创建一个sqlSession
+        1.获取环境信息,根据配置环境加载不同数据源
+        2.获取事务工厂创建一个事务：包含事务隔离级别配置(Enum类)、事务是否开启
+        3.创建一个执行器(默认是SimpleExecutor): 根据配置获取也可以通过 openSession传入参数设置执行器！
+        4.创建DefaultSqlSession
+    2.通过DefaultSqlSession获取Mapper对象！ 就是从注册的Map中取
+    3.执行Mapper中对应方法！
+        1.通过执行器执行对应方法,会将加载Mybatis加载好的MappedStatement一起给执行器！
+        2.通过SqlSource接口执行getBoundSql方法获取对应SQL。 如果是静态SQL可以从参数直接拿到,如果是动态SQL就会通过传入参数进行判断封装SQL。
+        3.判断一级缓存和二级缓存进行处理,执行SQL获取结果集！最后根据MappedStatement将结果集封装回java对象
+Mybatis都有哪些Executor执行器？  通过setting配置！作用范围都是一个sqlSession!  如果开启二级缓存会将执行器包装成缓存执行器！就是
+    1.SimpleExecutor(默认)：执行数据库操作前，每次都会新建一个statement，然后执行数据库操作。
+    2.ReuseExecutor：维护一个Map缓存,相同SQL会复用Statement
+    3.BatchExecutor：可以对增删改进行批处理,但是配置上不仅仅只是设置执行器,还有其他配置操作！  底层手动开启事务 然后SQL到批处理中  最后批量执行所有SQL  提交事务
+    4.缓存执行器：就是再原执行器的基础上增加了缓存处理
+DefaultSqlSession线程不安全问题？
+    1.因为DefaultSqlSession做不到每次请求创建一个新实例,如果多个请求共用一个,在一级缓存处可能导致并发冲突。
+        因为操作不是同步的,一级缓存先会存一个空的Enum.然后执行查询。第二个请求发现缓存不为空就会获取进行强制类型转换 从而引发报错！
+    解决：Spring-Mybatis中提供SqlSessionTemplate在每次请求都会使用代理创建一个实例
+Mybatis动态SQL
+    1.动态SQL类会将SQL解析成SqlNode然后对SQL进行拼接
+    2.#{}无论静态SQL还是动态SQL都会变成？通过preparedStatement执行！  ${}则和其他动态标签一样解析成SQLNode进行SQL拼接
+#{}和${}区别
+    1.${}和动态标签一样需要对SQL进行替换拼接 没有预编译SQL执行过程可能产生SQL注入问题
+    2.#{}替换成？号使用PreparedStatement执行,因为有预编译,避免SQL注入
+    使用场景：ORDER BY ${id} 如果使用#{id}会解析成"id"写法有误   表名等！
+    预编译的作用：1.预编译可以将多次操作合成一次,并且可以直接执行   2.预编译后产生的PreparedStatement会有缓存下次可以直接使用
+Mybatis怎么避免重复加载
+    加载之前会从Map查是否存在,不存在进行加载,第一步存到Map中,后续执行加载！ 因为启动是单线程不是并行,所以不会出现重复加载问题
+Mybatis接口绑定:  代码只需要调用接口方法自动完成实现的映射
+    1.注解绑定:接口上增加CRUD注解编写SQL。 SQL简单时可以使用,但是一般推荐使用XML方式
+    2.XML绑定:通过XML配置SQL实现！ 耦合度低,复杂SQL必须使用XML方式。 没有强迫性,自行选择
 ---------------------------------------------------------------------------------------------
 
 

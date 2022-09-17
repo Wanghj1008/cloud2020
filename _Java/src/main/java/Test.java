@@ -1,7 +1,6 @@
-import cn.hutool.core.io.watch.WatchMonitor;
-import cn.hutool.core.io.watch.watchers.DelayWatcher;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+import spring.mybatis.service.UserService;
 
-import java.io.File;
 import java.util.*;
 
 /**
@@ -12,14 +11,32 @@ import java.util.*;
 public class Test {
 
 
-
-    public static void main(String[] args) {
-        File configFile = new File("E:/a.txt");
-        WatchMonitor watchMonitor = WatchMonitor.create(configFile, WatchMonitor.ENTRY_MODIFY, WatchMonitor.ENTRY_CREATE);
+    public static void main(String[] args) throws Exception {
+        // 文件监听器
+//        File configFile = new File("E:/a.txt");
+//        WatchMonitor watchMonitor = WatchMonitor.create(configFile, WatchMonitor.ENTRY_MODIFY, WatchMonitor.ENTRY_CREATE);
 //        watchMonitor.setWatcher(new DelayWatcher(new ServerConfigWatcher(), 200));
-        watchMonitor.start();
+//        watchMonitor.start();
 
 //        change(new int[]{1});
+        // Mybatis执行
+        ClassPathXmlApplicationContext context = new ClassPathXmlApplicationContext("application.xml");
+/*        DefaultSqlSessionFactory sessionFactory = (DefaultSqlSessionFactory) context.getBean("sqlSessionFactoryBean");
+        SqlSession sqlSession = sessionFactory.openSession();
+        UserMapper mapper = sqlSession.getMapper(UserMapper.class);
+        mapper.selectList().forEach((user) -> {
+            System.out.println(user.toString());
+        });*/
+
+        // Spring封装Mybatis执行
+        UserService userService = (UserService) context.getBean("userService");
+        userService.getList().forEach((user) -> {
+            System.out.println(user.toString());
+        });
+        userService.getList().forEach((user) -> {
+            System.out.println(user.toString());
+        });
+
     }
 
     private static void change(int[] a) {

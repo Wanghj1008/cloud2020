@@ -1,5 +1,7 @@
 package spring.mybatis.model;
 
+import java.io.Serializable;
+
 /**
  * @Description:
  * @ClassName: User
@@ -7,7 +9,8 @@ package spring.mybatis.model;
  * @Date: 2022/9/16 18:08
  * @Version: 6.0.18.0
  */
-public class User {
+public class User implements Serializable {
+	private static final long serialVersionUID =1L;
 	private int id;
 	private String name;
 	private int age;
@@ -34,5 +37,14 @@ public class User {
 
 	public void setAge(int age) {
 		this.age = age;
+	}
+
+	@Override
+	public String toString() {
+		return "User{" +
+				"id=" + id +
+				", name='" + name + '\'' +
+				", age=" + age +
+				'}';
 	}
 }

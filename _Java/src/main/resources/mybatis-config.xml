@@ -30,26 +30,29 @@
         <!-- <setting name="callSettersOnNulls" value="true"/> -->
         <!-- 这个配置使全局的映射器启用或禁用缓存 -->
         <setting name="cacheEnabled" value="true"/>
+        <setting name="localCacheScope" value="STATEMENT"/>
         <!-- 全局启用或禁用延迟加载。当禁用时，所有关联对象都会即时加载 -->
 <!--        <setting name="lazyLoadingEnabled" value="true"/>-->
 <!--        <setting name="multipleResultSetsEnabled" value="true"/>-->
 <!--        <setting name="useColumnLabel" value="true"/>-->
 <!--        <setting name="defaultExecutorType" value="REUSE"/>-->
-        <!-- <setting name="defaultStatementTimeout" value="25000"/> -->
+<!--        <setting name="defaultStatementTimeout" value="25000"/> -->
 <!--        <setting name="callSettersOnNulls" value="true"/>-->
 <!--        <setting name="mapUnderscoreToCamelCase" value="false"/>-->
-
+<!--        <setting name="defaultExecutorType" value="BATCH" />-->
+<!--     自动获取生成主键,避免插入之后还需要查询主键   -->
+        <setting name="useGeneratedKeys" value="true"/>
     </settings>
-    <mappers>
-        <mapper class=""/>
-    </mappers>
-  <!--  <typeAliases>
-        <typeAlias alias="dto" type="com.venustech.ca.framework.common.model.BaseDto"/>
-    </typeAliases>-->
-    <!--  
-    <plugins>
-       <plugin interceptor="com.venustech.ca.framework.core.interceptor.mybatis.CopyTableInterceptor" />
-    </plugins>
-    -->
+    <!--    环境配置  可以配置多个数据源进行切换-->
+    <!--   <environments default="">
+           <environment id="">
+               <transactionManager type=""></transactionManager>
+               <dataSource type=""></dataSource>
+           </environment>
+       </environments>-->
+    <!--    <mappers>-->
+    <!--        <mapper resource="mapper/UserMapper.xml"/>-->
+    <!--        <package name=""/>-->
+    <!--    </mappers>-->
 
 </configuration>

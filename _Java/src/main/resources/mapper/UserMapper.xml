@@ -9,7 +9,10 @@
         <id column="age" property="age" jdbcType="INTEGER"/>
     </resultMap>
 
+    <cache>
+        <property name="getList" value="selectList"/>
+    </cache>
     <select id="selectList" resultMap="BaseResultMap">
-        select * from `user`
+        select * from `user` where id=#{id} and `name`=${name}
     </select>
 </mapper>

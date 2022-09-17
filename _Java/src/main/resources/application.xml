@@ -51,9 +51,15 @@
         <property name="password" value="${sm.password}"/>
     </bean>
 
-    <bean class="org.mybatis.spring.SqlSessionFactoryBean">
+    <bean id="sqlSessionFactoryBean" class="org.mybatis.spring.SqlSessionFactoryBean">
         <property name="mapperLocations" value="mapper/*.xml"/>
         <property name="dataSource" ref="dataSource"/>
         <property name="configLocation" value="mybatis-config.xml"/>
+    </bean>
+
+    <!-- 配置mapper接口的扫描器，将Mapper接口的实现类自动注入到IoC容器中实现类Bean的名称默认为接口类名的首字母小写 -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <!-- basePackage属性指定自动扫描mapper接口所在的包 -->
+        <property name="basePackage" value="spring.mybatis.mapper"/>
     </bean>
 </beans>
