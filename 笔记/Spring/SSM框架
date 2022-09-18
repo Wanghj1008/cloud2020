@@ -1,11 +1,3 @@
-SpringMVC：
-    拦截用户请求,DispatcherServlet承担中介职责将用户请求通过HandlerMapping去匹配controller,然后controller执行具体操作
-
-架构分层：
-    1.视图层：视图层和控制层结合紧密,视图层主要是页面的展示
-    2.控制层：控制要调用的业务层代码
-    3.业务层：业务代码的逻辑处理，可能会涉及到持久层接口的调用
-    4.持久层：负责与数据库交互,进行CRUD的操作
 SSM原理流程：
     1.客户端发送请求到DispatcherServlet
     2.DispatcherServlet控制器查询HandlerMapping,找到对应Controller
@@ -27,7 +19,7 @@ Spring： 开源的轻量级框架,简化应用程序开发,降低耦合度。
             2.注解方式
                 1.配置自动扫描路径,启动时会根据路径对所有类进行扫描
                 2.直接将含注解的bean注册到容器中
-        Bean实例化参数配置： //todo 了解动态代理和CGlib代码 搭配作用域scope使用
+        Bean实例化参数配置：
             1.scope(默认单例)  注解方式：@Scope(value = WebApplicationContext.SCOPE_SESSION,  proxyMode =ScopedProxyMode.INTERFACES)
                 1.singleton：单例 ：每一个bean只有一个实例。Spring创建就会被加载,生命周期和Spring一致。
                 2.prototype：多例 (懒加载,用的时候才走初始化用完就会销毁)：每次对bean的请求都会创建一个实例
@@ -293,12 +285,21 @@ Mybatis接口绑定:  代码只需要调用接口方法自动完成实现的映�
     1.注解绑定:接口上增加CRUD注解编写SQL。 SQL简单时可以使用,但是一般推荐使用XML方式
     2.XML绑定:通过XML配置SQL实现！ 耦合度低,复杂SQL必须使用XML方式。 没有强迫性,自行选择
 ---------------------------------------------------------------------------------------------
+SpringMvc中Spring容器怎么启动？ 配置ServletContextListener监听器
+    1.ServletContextListener： 1.创建webApplicationContext   2.执行refresh方法！  3.将webApplicationContext加载到ServletContext容器中
+SpringMVC执行流程源码
+    1.Tomcat启动监听端口,根据web.xml拦截对应请求到DispatcherServlet,执行父类service方法,将Http按类型进行执行最终调用processRequest方法
+    2.processRequest方法核心方法主要就是执行doService！ 国际化的构建也是在这一步进行的
+    3.doService主要给request参数封装一些控制器,然后调用doDispatch方法
+        1.查找Handler对应的HandlerMapping部分：
+    4.
 
 
 
 
 
-
+常用的HttpMethod
+    1.GET(查询)    2.Put(插入)   3.Delete(删除)    4.post(修改)    5.PATCH[获取Http的patch方法]
 
 
 
