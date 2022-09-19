@@ -9,7 +9,9 @@
 		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
 		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
     <!--    注解扫描-->
-    <context:component-scan base-package="spring,aop,transaction"/>
+    <context:component-scan base-package="spring,aop,transaction">
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
 
 
     <!--    代理模式相关配置 start-->
@@ -52,9 +54,9 @@
     </bean>
 
     <bean id="sqlSessionFactoryBean" class="org.mybatis.spring.SqlSessionFactoryBean">
-        <property name="mapperLocations" value="mapper/*.xml"/>
+        <property name="mapperLocations" value="classpath:mapper/*.xml"/>
         <property name="dataSource" ref="dataSource"/>
-        <property name="configLocation" value="mybatis-config.xml"/>
+        <property name="configLocation" value="classpath:mybatis-config.xml"/>
     </bean>
 
     <!-- 配置mapper接口的扫描器，将Mapper接口的实现类自动注入到IoC容器中实现类Bean的名称默认为接口类名的首字母小写 -->

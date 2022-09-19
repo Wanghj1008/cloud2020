@@ -285,8 +285,8 @@ Mybatis接口绑定:  代码只需要调用接口方法自动完成实现的映�
     1.注解绑定:接口上增加CRUD注解编写SQL。 SQL简单时可以使用,但是一般推荐使用XML方式
     2.XML绑定:通过XML配置SQL实现！ 耦合度低,复杂SQL必须使用XML方式。 没有强迫性,自行选择
 ---------------------------------------------------------------------------------------------
-SpringMvc中Spring容器怎么启动？ 配置ServletContextListener监听器
-    1.ServletContextListener： 1.创建webApplicationContext   2.执行refresh方法！  3.将webApplicationContext加载到ServletContext容器中
+SpringMvc中Spring容器怎么启动？ 配置ContextLoaderListener监听器
+    1.实现了ServletContextListener： 1.创建webApplicationContext   2.执行refresh方法！  3.将webApplicationContext加载到ServletContext容器中
 SpringMVC执行流程源码
     1.Tomcat启动监听端口,根据web.xml拦截对应请求到DispatcherServlet,执行父类service方法,将Http按类型进行执行最终调用processRequest方法
     2.processRequest方法核心方法主要就是执行doService！ 国际化的构建也是在这一步进行的
@@ -301,7 +301,8 @@ SpringMVC执行流程源码
 常用的HttpMethod
     1.GET(查询)    2.Put(插入)   3.Delete(删除)    4.post(修改)    5.PATCH[获取Http的patch方法]
 
-
+classpath:和classpath*:区别
+    带*他会搜索所有的classpath,包含依赖的Jar内的也会扫描！  一致性差有时候会出现问题,一般情况下没必须用*！
 
 
 
