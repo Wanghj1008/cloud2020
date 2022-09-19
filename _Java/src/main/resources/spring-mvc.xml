@@ -12,4 +12,11 @@
     <context:annotation-config/>
     <context:component-scan base-package="spring.springmvc.controller"/>
 
+    <mvc:interceptors>
+        <mvc:interceptor>
+            <mvc:mapping path="/**"/>
+            <bean class="spring.springmvc.interceptor.MyInterceptor"/>
+        </mvc:interceptor>
+    </mvc:interceptors>
+
 </beans>

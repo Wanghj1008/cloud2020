@@ -3,7 +3,7 @@ package spring.springmvc.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 import spring.mybatis.service.UserService;
 
 /**
@@ -15,12 +15,15 @@ import spring.mybatis.service.UserService;
  * @Copyright
  */
 @Controller
+@ResponseBody
 public class UserController {
     @Autowired
     UserService userService;
+
     @GetMapping("test")
-    public void test(){
-        userService.getList();
+    @ResponseBody
+    public String test() {
+        return userService.getList().get(0).toString();
     }
 
 }

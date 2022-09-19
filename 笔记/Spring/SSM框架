@@ -286,14 +286,24 @@ Mybatis接口绑定:  代码只需要调用接口方法自动完成实现的映�
     2.XML绑定:通过XML配置SQL实现！ 耦合度低,复杂SQL必须使用XML方式。 没有强迫性,自行选择
 ---------------------------------------------------------------------------------------------
 SpringMvc中Spring容器怎么启动？ 配置ContextLoaderListener监听器
-    1.实现了ServletContextListener： 1.创建webApplicationContext   2.执行refresh方法！  3.将webApplicationContext加载到ServletContext容器中
+    1.实现了ServletContextListener接口 执行初始化方法 创建webApplicationContext   2.执行refresh方法！  3.将webApplicationContext加载到ServletContext容器中
+SpringMvc拦截器interceptor (实现HandlerInterceptor)
+    1.preHandle：执行方法前执行,可用作身份校验。
+    2.postHandle:返回ModelAndView之前执行,
+    3.afterCompletion:执行方法完毕调用,可用作日志处理,异常处理。
+    执行顺序：配置文件中按配置顺序执行
 SpringMVC执行流程源码
     1.Tomcat启动监听端口,根据web.xml拦截对应请求到DispatcherServlet,执行父类service方法,将Http按类型进行执行最终调用processRequest方法
     2.processRequest方法核心方法主要就是执行doService！ 国际化的构建也是在这一步进行的
     3.doService主要给request参数封装一些控制器,然后调用doDispatch方法
         1.查找Handler对应的HandlerMapping部分：
     4.
-
+SpringMvc核心组件
+    1.前端控制器(DispatcherServlet)：本质就是一个servlet
+    2.处理器映射器(HandlerMapping)：将访问路径和对应的Handler存储为映射关系,通过路径寻找对应Handler返回给前端控制器
+    3.处理器适配器(HandlerAdapter): 处理前端控制器发来的请求和处理器.找到真正handler执行,将mode和view返回给前端控制器
+    4.视图解析器(ViewResolver):根据视图名找到真正的视图地址,将前端控制器发来的view信息解析得到真正的view
+    5.视图渲染(View):将handler处理器中返回的model数据嵌入到视图解析器后展示对应的jsp页面
 
 
 
