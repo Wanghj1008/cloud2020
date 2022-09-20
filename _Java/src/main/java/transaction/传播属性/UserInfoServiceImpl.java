@@ -11,7 +11,7 @@ public class UserInfoServiceImpl {
     private UserInfoExtendServiceImpl userInfoExtendService;
 
 
-    @Transactional()
+//    @Transactional()
     public void service() {
         userInfoExtendService.serviceA();
         userInfoExtendService.serviceB();

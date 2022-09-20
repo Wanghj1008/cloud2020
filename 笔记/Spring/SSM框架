@@ -79,13 +79,13 @@ Spring： 开源的轻量级框架,简化应用程序开发,降低耦合度。
             1.源生JDBC使用事务： 1.获取连接 2.setAutoCommit开启事务  3.执行业务sql  4.commit提交/rollback回滚事务   5.关闭连接   实际是通过binLog或redLog实现的
             2.Spring事务: 不需要手动开启提交或回滚事务,只需要在业务类上增加transaction注解,通过AOP对方法进行增强实现事务的操作
         2.事务的传播属性： 多个事务同时存在的时候,Spring如何处理这些事务的行为。 属性定义在 TransactionDefinition中
-            1.PROPAGATION_REQUIRED： 支持当前事务，如果当前没有事务，就新建一个事务。这是最常见的选择，也是 Spring 默认的事务的传播。
-            2.PROPAGATION_REQUIRES_NEW：新建事务,如果存在事务进行挂起,创建新事务。外层事务失败回滚不影响内层事务结果！内层事务抛异常外层可以捕获决定是否回滚事务
-            3.PROPAGATION_SUPPORTS:支持当前事务，如果当前没有事务，就以非事务方式执行。
-            4.PROPAGATION_MANDATORY: 支持当前事务，如果当前没有事务，就抛出异常。   基本不用
-            5.PROPAGATION_NOT_SUPPORTED:以非事务方式执行操作，如果当前存在事务，就把当前事务挂起。   基本不用
-            6.PROPAGATION_NEVER:以非事务方式执行，如果当前存在事务，则抛出异常。    基本不用
-            7.PROPAGATION_NESTED:如果一个活动的事务存在，则运行在一个嵌套的事务中。
+            1.REQUIRED：调用者有事务,则共用一个,调用者没有事务自己创建一个事务。  事务包含的代码有异常对包含代码进行回滚
+            2.REQUIRES_NEW：调用者有事务,自己新建一个事务。两个事务独立。 里面事务错了外面事务可以捕获异常方式决定外层事务回滚还是提交。如果继续抛异常就回滚 自己解决就提交
+            3.SUPPORTS: 调用者有事务,则共用一个,调用者没有事务. 自己也不使用事务
+            4.MANDATORY(基本不用): 当前必须存在一个事务,没有就报异常
+            5.NOT_SUPPORTED(基本不用): 调用者有没有事务自己都不使用事务,但是自己报错会导致外层的事务回滚！
+            6.NEVER(基本不用):当前必须无事务.否则报异常
+            7.NESTED:调用者有事务,自己新建一个事务。 外层报错也会触发内层事务回滚,内层报错通过捕获异常决定外层提交还是回滚。
             如果没有活动事务,则按照1执行,可以保存多个回滚点,内部事务回滚不会对外部事物造成影响！只对DataSourceTransactionManager事务管理器起效。
         3.事务的隔离级别
             1.数据库隔离级别
@@ -109,6 +109,9 @@ Spring： 开源的轻量级框架,简化应用程序开发,降低耦合度。
                 1.隔离级别越高，越能保证数据的完整性和一致性，但是对并发性能的影响也越大。
                 2.大多数的数据库默认隔离级别为 Read Commited，比如 SqlServer、Oracle
                 3.少数数据库默认隔离级别为：Repeatable Read 比如： MySQL InnoDB
+        4.事务的失效情况
+            1.如果事务中存在多线程,事务会失效,多个线程会产生多个sqlSession,多个session之间相互隔离
+            2.同一server中调用方法  https://blog.csdn.net/nieyanshun_me/article/details/74898401  https://blog.csdn.net/doctor_who2004/article/details/51814476
     4.方便集成测试
     5.降低API使用难度,对很多API进行封装提供Template调用
 单例多例模式下线程安全问题：
@@ -284,6 +287,8 @@ Mybatis怎么避免重复加载
 Mybatis接口绑定:  代码只需要调用接口方法自动完成实现的映射
     1.注解绑定:接口上增加CRUD注解编写SQL。 SQL简单时可以使用,但是一般推荐使用XML方式
     2.XML绑定:通过XML配置SQL实现！ 耦合度低,复杂SQL必须使用XML方式。 没有强迫性,自行选择
+Mybatis模糊查询怎么写
+    使用concat('%',#{name},'%')  可以防止SQL注入
 ---------------------------------------------------------------------------------------------
 SpringMvc中Spring容器怎么启动？ 配置ContextLoaderListener监听器
     1.实现了ServletContextListener接口 执行初始化方法 创建webApplicationContext   2.执行refresh方法！  3.将webApplicationContext加载到ServletContext容器中

@@ -1,5 +1,7 @@
 package transaction.传播属性;
 
+import spring.mybatis.model.User;
+
 /**
  * @author 王昊杰
  * @version V1.0
@@ -9,6 +11,6 @@ package transaction.传播属性;
  * @Copyright
  */
 public interface UserInfoDao {
-     Integer save(UserInfoVo userInfoVo);
-     Integer save2(UserInfoVo userInfoVo);
+     Integer save(User userInfoVo);
+     Integer save2(User userInfoVo);
 }

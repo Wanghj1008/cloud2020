@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import spring.mybatis.model.User;
 
 @Service
 public class UserInfoExtendServiceImpl {
@@ -11,20 +12,20 @@ public class UserInfoExtendServiceImpl {
     @Autowired
     private UserInfoDao userInfoDao;
 
-    @Transactional(propagation = Propagation.REQUIRED)
+    @Transactional(propagation = Propagation.NEVER)
     public void serviceA() {
-        UserInfoVo infoVo = new UserInfoVo();
-        infoVo.setAge(100);
-        infoVo.setUserName("ceshi1");
-        userInfoDao.save(infoVo);
+        User user = new User();
+        user.setAge(100);
+        user.setName("测试1");
+        userInfoDao.save(user);
     }
 
-    @Transactional(propagation = Propagation.REQUIRED)
+    @Transactional(propagation = Propagation.NEVER)
     public void serviceB() {
-        UserInfoVo infoVo = new UserInfoVo();
-        infoVo.setAge(200);
-        infoVo.setUserName("ceshi2");
-        userInfoDao.save2(infoVo);
+        User user = new User();
+        user.setAge(200);
+        user.setName("测试2");
+        userInfoDao.save2(user);
     }
 }
 

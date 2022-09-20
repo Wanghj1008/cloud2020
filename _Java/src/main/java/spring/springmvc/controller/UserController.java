@@ -5,6 +5,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import spring.mybatis.service.UserService;
+import transaction.传播属性.UserInfoServiceImpl;
 
 /**
  * @author 王昊杰
@@ -19,11 +20,13 @@ import spring.mybatis.service.UserService;
 public class UserController {
     @Autowired
     UserService userService;
+    @Autowired
+    UserInfoServiceImpl userInfoService;
 
     @GetMapping("test")
     @ResponseBody
-    public String test() {
-        return userService.getList().get(0).toString();
+    public void test() {
+        userInfoService.service();
     }
 
 }
