@@ -1,3 +1,21 @@
+1.为什么While可以防止虚假唤醒而if不行？
+  因为线程被唤醒后执行的是wait之后的代码,如果是if就执行完出if判断了  而while往下执行还会进行一次判断  所以能防止虚假唤醒
+2.死锁 活锁、饥饿区别
+  1.死锁：两个或者两个以上线程,因抢夺资源造成的相互等待,没有外力作用就一直等待。
+  2.活锁：(自旋锁)因为条件不满足,一直失败然后重试。状态会改变,并且有可能自己解锁。
+  3.饥饿： 线程无法获取资源,无法执行  1.优先级高的一直执行,导致优先级低的无法执行     2.线程await之后总是其他线程被唤醒。造成无法执行
+3.线程调度算法是什么？
+  时间片轮转方式切换，
+  也可以通过设置优先级,抢占式,但是可能会造成线程饥饿
+4.为什么要引入Executor框架？和Executors区别      todo：juc书签
+  1.可以对线程统一管理,并且减少线程创建和销毁的开销,可以创建最大线程数和拒绝策略来控制线程数,实现线程复用,
+  Executor框架包括：线程池，Executor，Executors，ExecutorService，CompletionService，Future，Callable等。
+  Executors提供四张线程池创建。 single fixed schedule cached  但是可能造成OOM  推荐使用ThreadPoolExecutor
+5.如何停止一个正在运行的线程？
+   1.使用stop命令停止线程,是一种恶意中断,无论执行是否完整都会立即中断线程,可能会破坏原子性
+   2.使用 interrupt 生成中断标记,使用isInterrupt判断是否存在终端标记,return中止
+   3.当线程处于  sleep,wait,join 的时候,如果使用interrupt会抛出异常终止
+   4.使用volatile共享变量实现线程中断  while(共享变量)  设置false可中断循环
 线程常用的一些方法
     1.Join ： 如果一个线程A执行了thread.join()语句，其含义是：当前线程A等待thread线程终止之后才会继续执行
     2.wait,wait(long time):
