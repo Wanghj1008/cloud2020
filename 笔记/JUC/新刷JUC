@@ -160,9 +160,9 @@ ThreadLocal实现原理
     使用完之后通过finally方法执行remove将key和value都设置为null就会被GC回收
 为什么ThreadLocal建议设置成静态
     因为一个线程对应一个ThreadLocalMap,只需要创建一次即可.不加静态每次创建对象都创建一个相同的ThreadLocal浪费资源
-父子线程传递数据？线程池  //todo  https://juejin.cn/post/7097754858593189901#heading-9
-    set方法:首先获取当前线程,当前线程获取到线程的属性 ThreadLocalMap(是一个静态内部类) 如果为空创建这个属性  不为空进行set操作
-    父子线程传递数据： 提供了一个方法,原理创建子线程如果父线程的map不为空就会继承
+父子线程传递数据？线程池传递数据？  //todo
+    1.JDK自带InheritableThreadLocal解决父子线程传值问题,init方法判断父线程是否有Map拷贝到子线程
+    2.阿里巴巴开源TransmittableThreadLocal解决线程池传值问题。
 ---------------------------------------------------------------------------------------------------------------
 线程的状态  Thread.state 可以查看状态
     1.new 线程被创建,但是没有调用start方法
