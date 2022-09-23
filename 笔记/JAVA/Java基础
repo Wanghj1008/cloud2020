@@ -1,3 +1,6 @@
+JAVA体系结构
+    1.java程序设计语言(语言 C/C++)    2.java class 文件格式     3.java应用编程接口(Java API)     4.JVM
+    使用java语言调用Java API编写Java文件 编译成Class文件  提供JVM执行
 1.面向对象和面向过程的区别？
     1.面向对象：将一个功能分析有哪些实体,实体中属性和方法.通过方法调用完成功能。 优点：复用性高,容易扩展  缺点：创建对象实例需要消耗性能
     2.面向过程：将一个功能自顶向下拆分,逐步细化的一个过程                    优点：性能高           缺点:复用性和扩展性低
@@ -57,7 +60,7 @@ BigDecimal
     2.两个BigDecimal使用equals可能会产生问题,因为会比较精度   建议使用compareTo比较
     3.BigDecimal做除法运算一定要处理精度和舍入模式,因为可能产生无限小数
     4.当BigDecimal输出String类型使用toString会采用科学计数法(E+)   可以使用toPlainString不采用科学技术
-Char是否可以存中文字符
+Char是否可以存中文字符  //todo
     Java的编码是UTF16,一个中文占两个字节. 当编码改成UTF8一个中文占三个字节. char采用Unicode包含中文所以UTF16下可以存中文,而UTF8情况下会变成？
 为什么包装类型内部值都是用final修饰？ 因为final也采用读写屏障来保证多线程下安全,防止线程拿到未初始化的默认值
 11.Switch上可以使用 char、byte、int、String、enum  不能使用 float、double、boolean
@@ -72,15 +75,28 @@ Char是否可以存中文字符
     Math.ceil()    表示向上取整，返回double类型    （ceil---天花板）
     Math.round()   四舍五入，返回int类型
 14.你对泛型有多少了解？
-   1.代码更加简洁,程序更加健壮(如果有类型转换异常编译会报错),平时在集合经常使用泛型.
-   类型擦除：在字节码中实际存储和取出都是使用的Object,在取出时进行类型强转
-   只支持封装类型,不能使用基本数据类型
+    为什么引入泛型：1.5之前使用Object表示任意对象,编译不报错但是强转可能出问题,程序不安全。
+    引入泛型的好处：1.编译期如果不报错运行就不会出现类型转换异常的问题  2.代码健壮性高
+    类型擦除：在字节码中实际存储和取出都是使用泛型的顶层父类,正常情况下都是Object,当我们指定<t super String>的时候会使用String,在取出时从字节码中获取类型进行强转
+    泛型通配符: 1.<? super T> 传入参数为T或T的父类   2.<? extends T> 传入参数为T或T的子类
+15.反射
 
 
 
-
-
-
+访问修饰符
+    public:   当前类、同包内(同包子类、同包其他类)、不同包子类  其他包 都可以访问
+    protect： 当前类、同包内(同包子类、同包其他类)、不同包子类                              除了当前类和同包下和不同包子类 其他都不可以访问
+    default： 当前类、同包内(同包子类、同包其他类)、                                      除了当前类和同包下都不可访问
+    private： 当前类                                                                除了当前类都不可访问
+String、StringBuilder、StringBuffer 区别  都是使用char数组,后两个区别就是有没有加锁
+    String：包装类是一个类,内部使用 private static final char[] value;  适合 少量字符串操作 因为不可变字符串所以+会一直创建字符串  垃圾回收时才会把没有引用的回收掉  效率低
+    StringBuilder:速度快但是线程不安全,适合单线程字符串频繁操作使用。 是在原有字符串上做更改
+    StringBuffer:速度比builder慢但是线程安全,适合多线程字符串频繁操作使用  是在原有字符串上做更改
+    他们扩容机制(区别是否有锁): 无参构造默认存放16个字符,有参String类型默认String长度+16个字符,有参int类型默认是设置的int值大小 。扩容大小为原始*2+2   之所以加2是因为拼接后末尾存在多于字符
+    效率：  String + < String concat < StringBuffer  <StringBuilder         StringBuffer线程安全和String final修饰线程安全
+Comparable 与 Comparator
+    都是排序方法,用法:实体类实现 Comparable<T> 重写compareTo方法即可进行调用使用    String和Integer自己实现了Comparable可以直接使用  自定义类或者List集合可以使用Comparable进行排序
+    不支持自排序的比如二维数组使用Comparator 匿名类的方式重写排序方法
 
 来讲讲什么是注解？
    1.代码中的特殊标记,可以在编译,加载,运行时执行相应的处理    原生@Overried、@FunctionalInterface
@@ -99,23 +115,7 @@ SLF4J、JCL 和Log4j、LogBack区别？
    2.SLF4J、JCL 属于日志框架,有利于维护,切换日志系统。与底层日志系统无关,有利于任意更换日志系统
 
 
-JAVA体系结构
-    1.java程序设计语言(语言 C/C++)    2.java class 文件格式     3.java应用编程接口(Java API)     4.JVM
-    使用java语言调用Java API编写Java文件 编译成Class文件  提供JVM执行
-访问修饰符
-    public:   当前类、同包内(同包子类、同包其他类)、不同包子类  其他包 都可以访问
-    protect： 当前类、同包内(同包子类、同包其他类)、不同包子类                              除了当前类和同包下和不同包子类 其他都不可以访问
-    default： 当前类、同包内(同包子类、同包其他类)、                                      除了当前类和同包下都不可访问
-    private： 当前类                                                                除了当前类都不可访问
-String、StringBuilder、StringBuffer 区别  都是使用char数组,后两个区别就是有没有加锁
-    String：包装类是一个类,内部使用 private static final char[] value;  适合 少量字符串操作 因为不可变字符串所以+会一直创建字符串  垃圾回收时才会把没有引用的回收掉  效率低
-    StringBuilder:速度快但是线程不安全,适合单线程字符串频繁操作使用。 是在原有字符串上做更改
-    StringBuffer:速度比builder慢但是线程安全,适合多线程字符串频繁操作使用  是在原有字符串上做更改
-    他们扩容机制(区别是否有锁): 无参构造默认存放16个字符,有参String类型默认String长度+16个字符,有参int类型默认是设置的int值大小 。扩容大小为原始*2+2   之所以加2是因为拼接后末尾存在多于字符
-    效率：  String + < String concat < StringBuffer  <StringBuilder         StringBuffer线程安全和String final修饰线程安全
-Comparable 与 Comparator
-    都是排序方法,用法:实体类实现 Comparable<T> 重写compareTo方法即可进行调用使用    String和Integer自己实现了Comparable可以直接使用  自定义类或者List集合可以使用Comparable进行排序
-    不支持自排序的比如二维数组使用Comparator 匿名类的方式重写排序方法
+
 
 
 5中IO模型和零拷贝
