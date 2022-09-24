@@ -12,17 +12,14 @@ JAVA体系结构
         2.重载(编译时多态):方法名相同,参数列表不同(参数个数,参数类型,参数顺序)
         1.通过栈帧中对象引用找到堆中类对象  2.分析对象头找到方法区的Class详细信息  3.每个类都有一个虚方法表(vTable)在链接阶段就生成好了  4.查找虚方法表得到方法具体地址  5.执行方法字节码
     4.虚方法:Java种所有被重写的方法都是虚方法
-    invokeStatic执行静态方法  invokeSpecial执行init方法(静态属性静态代码块)  invokesVirtual执行虚方法   invokeInterface执行接口
+    5.字节码方法调用方式 1.invokeStatic执行静态方法 2.invokeSpecial执行init方法(静态属性静态代码块) 3.invokesVirtual执行虚方法  4.invokeInterface执行接口
 3.构造方法相关问题
     1.子类调用构造方法默认会执行父类的无参构造(因为可能用父类的属性和方法,所以必须先创建父类对象在创建子类对象)
     2.super()调用父类构造this()调用重载构造,他们都只能放到构造方法第一行,不能同时出现
-4.static和final关键字
-    static：
-        1.修饰(变量、方法、类、代码块)   静态代码块优化性能:比如加载文件可以写在静态代码块中,只加载一次  类变量存随类存放在方法区  访问无需创建对象  直接类名.方法名 调用
-        2.静态优先于对象的加载,所以不能使用this和super等关键字
-    final：
-        1.修饰静态成员必须进行初始化(立即赋值或者静态代码块赋值.只能赋值一次)
-        2.final多线程下作用:通过内存屏障 防止线程获取到未初始化的默认变量
+4.static和final
+    static：1.静态属性和代码块类加载时加载,所以不能使用this和super  2.静态方法可以通过类名调用,静态内部类(只是方便管理)
+    final： 1.static final必须赋值  2.final修饰的引用类型内部非final属性可以被修改
+            3.final存在内存屏障,其他线程使用必须要等构造方法执行完赋值。防止获取未初始化的对象(包装类内部都是用final的原因)
 5.Java 中创建对象的几种方式？
     1.new关键字    2.反射创建    3.clone拷贝    4.反序列化
 6.深拷贝和浅拷贝的区别(其实是针对Object和Array这种引用类型的)
@@ -38,14 +35,9 @@ JAVA体系结构
 8.序列化和反序列化： 对象和字节序列转换过程
     序列化反序列化：对象和二进制流的相互转换
     注意： 1.transient字段不序列    2.建议手动声明serialVersionUID,防止编译器不同产生报错   3.选择序列化工具 看功能、性能、兼容性 常用jackson、fastjson、kryo
-9.接口和抽象类
-    抽象类：单继承
-        1.只有声明没有实现,子类必须重写,所以不可以使用private和default这种子类可能访问不到的修饰符(编译报错！！)
-        2.子类继承抽象类必须实现父类抽象方法或者将自己设置为抽象类    抽象类不可实例化 编译报错！！
-    接口： 多继承
-        1.接口的作用是解决多重继承的,一个类可实现多个接口,接口种的常量默认都是public static final 不可修改,方法默认public abstract来修饰
-        2.接口种所有变量都是静态常量 所有方法都是抽象方法不能有方法体(可以存在默认方法default和静态static方法,有方法体通过类名和方法名调用)
-    相同点：都不可以实例化
+9.接口和抽象类(都不可以实例化)
+    抽象类：单继承,不可实例化,子类必须重写抽象方法,否则就需要把自己变成抽象类
+    接口： 多继承(为了解决抽象类单继承),方法(public abstract)、常量(public static final),JDK8支持存在default和static方法
 10.数据类型：  整数型默认int  浮点型默认Double
     1.整形默认0（byte 1字节 ，short 2字节，int 4字节，long 8字节） 浮点型默认0.0（float 4字节 double 8字节） 布尔型默认false boolean 1字节 字符型默认空 char 2字节
     2.自动类型转换：byte->short<->char—> int —> long—> float —> double    如果不按这个顺序编译报错(需要强制类型转换) char转换按照ASCII码转换
@@ -60,70 +52,108 @@ BigDecimal
     2.两个BigDecimal使用equals可能会产生问题,因为会比较精度   建议使用compareTo比较
     3.BigDecimal做除法运算一定要处理精度和舍入模式,因为可能产生无限小数
     4.当BigDecimal输出String类型使用toString会采用科学计数法(E+)   可以使用toPlainString不采用科学技术
-Char是否可以存中文字符  //todo
+Char是否可以存中文字符
     Java的编码是UTF16,一个中文占两个字节. 当编码改成UTF8一个中文占三个字节. char采用Unicode包含中文所以UTF16下可以存中文,而UTF8情况下会变成？
-为什么包装类型内部值都是用final修饰？ 因为final也采用读写屏障来保证多线程下安全,防止线程拿到未初始化的默认值
-11.Switch上可以使用 char、byte、int、String、enum  不能使用 float、double、boolean
-12.equals 和 hashCode 和 ==
+String
+    1.为什么String是不可变的类？ 主要为了节约内存提高效率
+        1.字符串常量池作用就是节约内存资源,如果类可变两个String共用一个指针会导致线程安全问题   2.String创建就包含了hash作为属性,提高集合使用效率
+11.String、StringBuilder、StringBuffer
+    String："+" --> StringBuilder.append.toString(new String)   适合少量字符串操作,每次创建对象所以效率最低,发生GC才会清理不使用的
+    StringBuilder: 线程不安全,不创建新字符串,单线程循环中使用,效率最高
+    StringBuffer:  线程安全,不创建字符串,多线程循环中使用       区别：（*加没加锁）
+    他们扩容机制: 无参构造默认存放16个字符,有参String类型默认String长度+16个字符,有参int类型默认是设置的int值大小 。扩容大小为原始*2+2   之所以加2是因为拼接后末尾存在多于字符
+12.Switch上可以使用 char、byte、int、String、enum  不能使用 float、double、boolean
+13.equals 和 hashCode 和 ==
     equals:引用类型默认调用Object的equals使用==比较地址。 String重写后会先比较地址,地址一致返回true不一致会遍历字符数组,全一模一样也会返回true否则返回false  Integer则是转成int进行==
     ==：基本数据类型比较值是否一致,引用数据类型则是地址
     hashCode引入背景：集合中判断重复如果全用equals 效率很低,hashcode是一个优化,先通过hash计算位置然后找到使用equals判断,提高效率 也就是说hashCode和equals都相同就认为重复
     问题：集合中如果key的hashCode不相同就会认为不存在,所以可以一直put
     解决：所以重写equals必须要重写hasCode
-13.常用函数：
+14.常用函数：
     Math.floor()   表示向下取整，返回double类型   （floor---地板）
     Math.ceil()    表示向上取整，返回double类型    （ceil---天花板）
     Math.round()   四舍五入，返回int类型
-14.你对泛型有多少了解？
-    为什么引入泛型：1.5之前使用Object表示任意对象,编译不报错但是强转可能出问题,程序不安全。
-    引入泛型的好处：1.编译期如果不报错运行就不会出现类型转换异常的问题  2.代码健壮性高
-    类型擦除：在字节码中实际存储和取出都是使用泛型的顶层父类,正常情况下都是Object,当我们指定<t super String>的时候会使用String,在取出时从字节码中获取类型进行强转
-    泛型通配符: 1.<? super T> 传入参数为T或T的父类   2.<? extends T> 传入参数为T或T的子类
-15.反射
-
-
-
-访问修饰符
+15.你对泛型有多少了解？
+    泛型的引入是一种优化,之前用Object表示任意对象,获取时强制类型转换可能存在异常,而且执行阶段才能复现.程序不安全。泛型编译通过则运行不会产生强转异常问题
+    类型擦除：在字节码中实际存储和取出都是使用泛型的顶层父类,正常情况下都是Object,当我们指定<t extends String>的时候会使用String,在取出时从字节码中获取类型进行强转
+    泛型通配符: 1.<? super T> 传入参数为T或T的父类   2.<? extends T> 传入参数为T的子类不包含T (*所以这样设置最终类只能传null,因为没得子类)
+16.反射
+    作用：运行期间根据配置决定要获取的类,避免代码耦合度高修改时需要重新改代码编译打包
+    优点：运行期判断获取类,灵活度高,提供了代码扩展性  缺点：性能低(反射动态加载类,无法使用解释器编译器进行优化),动态操作修改类可能导致线程不安全
+    场景：1.JDBC加载驱动  2.Spring配置文件实例化class方式  3.Tomcat的Servlet,对外配置web.xml加载用户配置的Servlet
+17.代理模式：
+   作用： 1.可以对方法进行增强,例如AOP实现增强方法   2.控制是否可进行目标方法的调用
+   静态代理： 需求变了改代码实现功能    优点：容易理解,使用方便 2.如果改动较大,大部分类都要修改
+   动态代理： 增强方法写在代理类中,只需要将业务代码生成一个代理对象即可   优点：耦合度低,灵活度高便于维护
+       JDK Proxy: 实现 InvocationHandler接口 重写invoke方法进行增强。 基础是反射机制,因为执行方法调用method.invoke。创建实例调用proxy.newProxyInstance
+       CGLib Proxy：实现 MethodInterceptor接口 重写intercept方法进行拦截增强。 原理是创建目标类子类,setSuperClass实现,覆盖其中方法进行增加。所以final方法不可用
+       差异性：
+           1.JDK代理是JAVA原生提供的,JDK8性能提高很多而且写起来方便,但是只能对接口进行增强   CGLib都可以进行增强,Spring提供的还需要引入ASM.jar,基于ASM(字节码操控框架)实现
+           2.JDK代理直接编译生成字节码加载到JVM而CGLIB使用ASM效率较低,但是执行方法JDK使用反射而CGLIB使用FastClass为代理类和被代理类各一个类,通过index确定调用方法  整体：CGLIB速度快
+           3.JDK代理对接口处理,所以不支持私有、保护。接口支持static但是没有实现方法不能代理    CGLIB创建子类方式：所以私有、保护、final、static等方法也不可代理
+18.访问修饰符
     public:   当前类、同包内(同包子类、同包其他类)、不同包子类  其他包 都可以访问
     protect： 当前类、同包内(同包子类、同包其他类)、不同包子类                              除了当前类和同包下和不同包子类 其他都不可以访问
     default： 当前类、同包内(同包子类、同包其他类)、                                      除了当前类和同包下都不可访问
     private： 当前类                                                                除了当前类都不可访问
-String、StringBuilder、StringBuffer 区别  都是使用char数组,后两个区别就是有没有加锁
-    String：包装类是一个类,内部使用 private static final char[] value;  适合 少量字符串操作 因为不可变字符串所以+会一直创建字符串  垃圾回收时才会把没有引用的回收掉  效率低
-    StringBuilder:速度快但是线程不安全,适合单线程字符串频繁操作使用。 是在原有字符串上做更改
-    StringBuffer:速度比builder慢但是线程安全,适合多线程字符串频繁操作使用  是在原有字符串上做更改
-    他们扩容机制(区别是否有锁): 无参构造默认存放16个字符,有参String类型默认String长度+16个字符,有参int类型默认是设置的int值大小 。扩容大小为原始*2+2   之所以加2是因为拼接后末尾存在多于字符
-    效率：  String + < String concat < StringBuffer  <StringBuilder         StringBuffer线程安全和String final修饰线程安全
-Comparable 与 Comparator
-    都是排序方法,用法:实体类实现 Comparable<T> 重写compareTo方法即可进行调用使用    String和Integer自己实现了Comparable可以直接使用  自定义类或者List集合可以使用Comparable进行排序
-    不支持自排序的比如二维数组使用Comparator 匿名类的方式重写排序方法
-
-来讲讲什么是注解？
-   1.代码中的特殊标记,可以在编译,加载,运行时执行相应的处理    原生@Overried、@FunctionalInterface
-   2.自定义注解自动继承 Annotation(元注解),
-   3.元注解专门的一些注释
-       1.@Target ：用来限定注解的位置,比如接口,属性,方法等  一般来说使用方法
-       2.@Retention：用来表示注解的生命周期,包括 源文件阶段、编译到class阶段、运行阶段       默认CLASS
+19.来讲讲什么是注解？
+    1.代码中的特殊标记,可以在编译,加载,运行时执行相应的处理    原生@Overried、@FunctionalInterface
+    2.自定义注解自动继承 Annotation(元注解),
+    3.元注解专门的一些注释
+        1.@Target ：用来限定注解的位置,比如接口,属性,方法等  一般来说使用方法
+        2.@Retention：用来表示注解的生命周期,包括 源文件阶段、编译到class阶段、运行阶段       默认CLASS
             源文件阶段：不会参与到编译和运行 一般就是注释作用
             编译到class阶段：编译期间可能会做一些处理,运行期读不到    Lombok就是这个编译阶段完成的get\set方法嵌入  继承一个类实现方法
             运行阶段：一般配合AOP 通过反射获取到注解然后执行相应的操作
-       3.@Documented注解，是被用来指定自定义注解是否能随着被定义的java文件生成到JavaDoc文档当中。
-       4.@Inherited注解，是指定某个自定义注解如果写在了父类的声明部分，那么子类的声明部分也能自动拥有该注解。@Inherited注解只对那些@Target被定义为ElementType.TYPE的自定义注解起作用。
-
-SLF4J、JCL 和Log4j、LogBack区别？
-   1.Log4j、LogBack属于日志系统,如果系统中出现多个日志系统需要分别维护(并且Log4j出现过漏洞 导致JNDI注入问题)
-   2.SLF4J、JCL 属于日志框架,有利于维护,切换日志系统。与底层日志系统无关,有利于任意更换日志系统
-
-
-
-
-
-5中IO模型和零拷贝
-
-
-
-
-
-
-
+        3.@Documented注解，是被用来指定自定义注解是否能随着被定义的java文件生成到JavaDoc文档当中。
+        4.@Inherited注解，是指定某个自定义注解如果写在了父类的声明部分，那么子类的声明部分也能自动拥有该注解。@Inherited注解只对那些@Target被定义为ElementType.TYPE的自定义注解起作用。
+20.IO流
+    1.字符流和字节流区别？
+        1.读取的最小单位不同,字节流为一个字节,java默认UTF16下字符流占两个字节   2.Reader和Write都是字符流,Stream一般都是字节流
+    2.IO流的细分种类
+        1.StringReader/StringWriter：字符串流,专门操作String字符串
+        2.FileInputStream/FileReader：文件流,专门操作文件读取
+        3.InputStreamReader/OutputStreamReader:转换流,提供了字节流和字符流之间的转换
+        4.BufferedInputStream/BufferedOutputStream：缓冲流,读取进行缓冲减少IO操作,提高性能
+21.5中IO模型
+22.零拷贝
+23.SLF4J、JCL 和Log4j、LogBack区别？
+    1.Log4j、LogBack属于日志系统,如果系统中出现多个日志系统需要分别维护(并且Log4j出现过漏洞 导致JNDI注入问题)
+    2.SLF4J、JCL 属于日志框架,有利于维护,切换日志系统。与底层日志系统无关,有利于任意更换日志系统
+24.Comparable 与 Comparator
+    都是排序方法,用法:实体类实现 Comparable<T> 重写compareTo方法即可进行调用使用    String和Integer自己实现了Comparable可以直接使用  自定义类或者List集合可以使用Comparable进行排序
+    不支持自排序的比如二维数组使用Comparator 匿名类的方式重写排序方法
+-----------------------------------------------------------------------------------------------------
+异常处理
+1.finally  *坑(1.finally中最好不要写return  2.finally中修改基本数据类型对返回无影响)
+    1.finally中有return就不会执行try或catch的
+    2.finally中修改引用类型和基本类型是因为压入操作数栈的如果是引用就会被关联修改,如果是值传递则不会变(i++一样,i已经放进去了修改局部变量表不影响返回)
+    3.进入try代码块那么finally一定执行,没有进try就报错finally也不执行
+2.throwable
+    1.Error：系统错误,程序无法处理,出现只能暂停程序解决问题   例：系统崩溃、内存溢出。
+    2.Exception:异常,程序可以处理
+        1.checkException：编译时异常,需要显示try catch处理  常见：IOException、FileException
+        2.RuntimeException：运行时异常,不需要捕获,全局异常处理掉即可
+3.throw 和 throws
+    1.throw:代码中表示要抛出异常，如果运行时异常不需要其他处理,非运行时异常需要需要方法上申明,并且调用方需要try catch处理或继续申明抛出
+    2.throws：申明方法可能抛出异常,需要调用者处理异常
+4.主线程怎么捕获子线程异常
+    1.callable：使用FutureTask.get可以捕获子线程异常
+    2.使用线程池的submit方法可以捕获子线程异常
+-----------------------------------------------------------------------------------------------------
+Java8新特性
+1.lambda：解决new 接口时代码冗余的现象,但是接口中只能有一个未实现方法,一般会增加@FunctionalInterface 防止别人误以为普通接口增加方法
+3.函数式接口
+    1.consumer：消费型接口 accept方法 有输入 没有返回
+    2.function：函数型接口 apply方法 传入参数T返回参数R
+    3.predicate: 断定型接口 test方法  输入一个参数  返回一个Boolean
+    4.supplier：供应型接口           没有输入 只有返回
+4.Stream流式计算
+   定义：只是进行数据的处理,并不存储,从A端进入管道,进行排序,筛选等操作从另一端输出就类似于流,可以传入集合,数组数据
+       1.parallelStream和Stream  生成串行流和并行流
+       2.forEach：迭代流中数据      3.filter：过滤元素              4.limit：指定数量
+       5.sorted：排序              6.distinct：去重               7.map映射每个元素进行相应操作
+       8.Collectors：数据合并,返回集合或者字符串
+5.新的时间处理API：之前的util.data都是可变的,线程不安全
+   LocalDate/LocalTime ：now方法获取现在时间
 

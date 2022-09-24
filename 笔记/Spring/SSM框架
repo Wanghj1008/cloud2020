@@ -119,16 +119,6 @@ Spring： 开源的轻量级框架,简化应用程序开发,降低耦合度。
    多例：每次创建一个新对象,不存在多线程共享一个Bean。所以ThreadLocal、局部变量、全局变量都是线程安全的、静态变量存在线程不安全情况
    为什么Spring中controller、service、dao却线程安全？
        答：因为通常情况下我们都是调用他们内部的方法,对于JVM虚拟机栈来说是线程私有的,不涉及线程安全问题。
-代理模式：
-   作用： 1.可以对方法进行增强,例如AOP实现增强方法   2.控制是否可进行目标方法的调用
-   静态代理： 需求变了改代码实现功能    优点：容易理解,使用方便 2.如果改动较大,大部分类都要修改
-   动态代理： 增强方法写在代理类中,只需要将业务代码生成一个代理对象即可   优点：耦合度低,灵活度高便于维护
-       JDK Proxy: 实现 InvocationHandler接口 重写invoke方法进行增强。 基础是反射机制,因为执行方法调用method.invoke。创建实例调用proxy.newProxyInstance
-       CGLib Proxy：实现 MethodInterceptor接口 重写intercept方法进行拦截增强。 原理是创建目标类子类,setSuperClass实现,覆盖其中方法进行增加。所以final方法不可用
-       差异性：
-           1.JDK代理是JAVA原生提供的,JDK8性能提高很多而且写起来方便,但是只能对接口进行增强   CGLib都可以进行增强,Spring提供的还需要引入ASM.jar,基于ASM(字节码操控框架)实现
-           2.JDK代理直接编译生成字节码加载到JVM而CGLIB使用ASM效率较低,但是执行方法JDK使用反射而CGLIB使用FastClass为代理类和被代理类各一个类,通过index确定调用方法  整体：CGLIB速度快
-           3.JDK代理对接口处理,所以不支持私有、保护。接口支持static但是没有实现方法不能代理    CGLIB创建子类方式：所以私有、保护、final、static等方法也不可代理
 本来可以new对象,为什么要使用Spring IOC呢？
    1.主要好处就是bean的集中管理,降低耦合度  其次Spring提供了一整套Bean的生命周期管理,对于方法增强也有AOP处理
 Spring Bean： 生命周期
