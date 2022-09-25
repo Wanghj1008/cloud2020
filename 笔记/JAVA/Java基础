@@ -115,8 +115,16 @@ String
         2.FileInputStream/FileReader：文件流,专门操作文件读取
         3.InputStreamReader/OutputStreamReader:转换流,提供了字节流和字符流之间的转换
         4.BufferedInputStream/BufferedOutputStream：缓冲流,读取进行缓冲减少IO操作,提高性能
-21.5中IO模型
+21.五种IO模型：  https://juejin.cn/post/6844903839439519758 //todo
+    1.什么是IO
+        1.文件IO：将磁盘文件读取到用户空间
+        2.网络IO：用户发起读请求,服务器将数据发回来,应用程序将数据拷贝到用户空间
+    1.BIO(同步阻塞IO):socket服务端通过accept监听连接,连接后创建线程进行同步阻塞通讯,通讯结束销毁线程
+        缺点: 连接一直创建线程影响性能,可采用线程池控制线程数,但是数据大加上高并发很容易造成长时间等待
+    2.NIO
+    3.AIO
 22.零拷贝
+    1.
 23.SLF4J、JCL 和Log4j、LogBack区别？
     1.Log4j、LogBack属于日志系统,如果系统中出现多个日志系统需要分别维护(并且Log4j出现过漏洞 导致JNDI注入问题)
     2.SLF4J、JCL 属于日志框架,有利于维护,切换日志系统。与底层日志系统无关,有利于任意更换日志系统

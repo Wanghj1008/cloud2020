@@ -1,16 +1,38 @@
 Iterable接口(迭代器)： 实现此接口表示对象可迭代,常用方法 foreach 和 Iterator进行迭代
     自定义只需要实现 Iterable的Iterator方法创建一个Iterator类拥有便利的hasNext和next方法即可
-Collection接口(集合框架): 提供了对集合对象一些通用方法,add,remove,Stream等接口,是下面的父类
-    Set
-    List接口 :可以设置null值 有序可重复
-        ArrayList(基于动态数组)：1.查询比Linked快, 2.增加和删除可能导致大量的下标修改,相对比慢一些   3.查询多推荐使用ArrayList     1000W数据量 头插慢 尾插和中间插快
-        LinkedList(基于双向链表)：1.线性结构查询需要移动指针按序查找,相对比慢一些。 2.增删快     4.增删频繁推荐使用LinkedList
-        Vector 和ArrayList 相同点：基于索引,和ArrayList都可以存null值,也都可以通过索引值对元素进行访问
-        Vector 和ArrayList 不同点：Vector 加锁保证线程安全,效率比ArrayList低,一般使用CopyOnWriteArrayList或Collections里的synchronizedList
-        Array  和ArrayList 区别： 1.数组可以使用基本数据类型和引用类型 集合只能使用引用类型 2.数组需要指定大小,集合自动扩容  3.ArrayList提供的方法多 入addAll等
-        总结：如果不确定就使用 ArrayList 如果确定头插的操作比较多使用LinkedList。 LinkedList可以用作可视化链路追踪.
-    Queue
-Map接口(集合框架):表示一组键值对形式  只有 ConcurrentHashMap 线程安全
+---------------------------------------------------------------------------------------------------------------
+Collection 接口(集合框架): 提供了一些通用方法让子类自己实现(add、remove)
+Set集合： 无序不可重复,只能设置一个null
+    1.HasSet：基于哈希表,使用Hash算法存储和查询元素,底层就是HashMap,值为HashMap的key, value是一个固定值(Object对象),所以hashSet不可以重复
+    2.LinkedHashSet:是HasSet子类,在HasSet基础上增加了一个链表,所以他是有序的
+    3.TreeSet是SortedSet接口的唯一实现类，是基于二叉树实现的。
+    4.EnumSet：专门为枚举设计的集合,放入元素必须是枚举,集合元素是有序的
+    1.copyOnWriteArraySet
+List集合: 可以设置null值 有序可重复
+    1.ArrayList 和 LinkedList 的区别？
+        1.ArrayList基于数组,LinkedList基于双向链表,索引查询快于指针移动
+        2.千万数据实验下,头插LinkedList快,因为ArrayList所有下标都要偏移  尾插和中间插：ArrayList快
+        总结：查询多肯定用ArrayList,插入多也要区分是头插还是尾插,如果头插选LinkedList 尾插选ArrayList. LinkedLis可用作可视化链路跟踪
+    2.ArrayList 实现 RandomAccess 接口有何作用？
+        1.RandomAccess(随机访问)：只是个标记接口,如果List实现了该接口则for循环比iterator访问更快,并且二分源码中也做了判断来决定for还是iterator
+        2.ArrayList、CopyOnWriteArrayList、Vector都实现了这个随机访问。
+    3.Array 和 ArrayList 有何区别？什么时候更适合用 Array？
+        1.ArrayList只能包含对象,Array可以包含基本数据类型
+        2.ArrayList可以动态扩容,并且提供了多种方法,Array需要指定大小,超过会报错
+        场景：确定长度的时候可以用Array
+    4.Vector 和 ArrayList 区别？
+        1.Vector所有方法都加锁线程安全但是效率低,一般不会使用
+    5.CopyOnWriteArrayList
+Queue
+SynchronizedCollection
+    1.Collections.synchronizedList()
+    2.Collections.synchronizedSet()
+    3.Collections.synchronizedMap()
+---------------------------------------------------------------------------------------------------------------
+Map接口(集合框架):表示一组键值对形式
+    1.HashMap 和 HashTable 的区别？
+        1.HashTable基于哈希表,本身是同步的(性能低),不支持空键空值
+        2.HashMap不是同步的,性能高,并且支持空键空值
     TreeMap: 红⿊树
     HashTable:                不允许空key,底层hashcode方法为空会抛空指针 HashMap如果key为空会转换成0调用hashcode方法
     HashMap: 数组+链表/红⿊树   允许空key空value 不可重复,key相同覆盖
@@ -20,20 +42,20 @@ Map接口(集合框架):表示一组键值对形式  只有 ConcurrentHashMap �
 Collections工具类： 提供了很多静态方法,例如Sort对list集合排序(需要对象实现 Comparable 实现 compareTo方法)、获取线程安全的集合对象、获取集合最大最小值
 
 
-1.Java原生就有数组,为什么还要引入ArrayList？
-    因为原生数组需要指定长度,少了装不下多了浪费内存,而 ArrayList 实现了动态扩容。
-    初始容量为空数组 让第一次add时候容量变成10 每次add数据都会计算数组空间是否足够,不够就会自动扩容
-    扩容方法：grow 1.参数为集合现有元素和要添加元素所占实际大小  2.获取旧容量  3.扩容1.5倍新容量
-            4.如果新容量小于第一步所占大小,直接扩容为第一步大小  5.如果新容量大于数组最大值,实际占用大于数组最大返回Integer最大 否则返回数组最大
-    扩容完毕调用本地方法 arraycopy 进行数组复制。 只是浅拷贝
-2.为什么 数组MAX_ARRAY_SIZE 和Integer.MAX - 8 ？
-    因为数组需要额外存储元数据信息,所以数组最大大小为 Integer.MAX - 8
 3.copyOnWrite原理
     add方法是加锁的,写的时候不在原有数据上操作,而是复制出一份当写完毕将指针指向新元素,初始大小为0,每次复制会进行+1操作 所以不需要扩容 但是依然需要arraycopy的拷贝
     缺点：1.消耗内存,每次add都会复制数组  2.因为读不加锁,所以保证数据最终一致性。 如果A线程读还没读完的时候  B线程将集合清空但是指针没有改变 A还是会读取到集合数据
 
 
-
+---------------------------------------------------------------------------------------------------------------
+扩容机制
+1.List扩容机制
+    1.初始化为空数组,第一次add容量变为10,每次add判断空间是否足够,不够进行调用扩容方法(grow)  参数：add之后占用大小
+    2.获取原大小扩容1.5倍,判断是否可以存下,不能存下直接扩容到add之后大小。 判断最大值处理,如果add之后超过最大值会报内存溢出
+    3.扩容完毕调用 arraycopy 方法进行数组复制.浅拷贝
+    追问：为什么 数组MAX_ARRAY_SIZE 等于 Integer.MAX - 8 ？
+        因为数组需要额外存储元数据信息,所以数组最大大小为 Integer.MAX - 8
+2.
 
 
 

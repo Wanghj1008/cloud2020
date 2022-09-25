@@ -196,24 +196,3 @@ wait和sleep的区别？
     blockingQueue：阻塞队列   》》》一边存 另一边取
     AbstractQueue：非阻塞队列
     Deque：双端队列           》》》 两边都可以存取
----------------------------------------------------------------------------------------------------------------
-JAVA基础
-   1.ArrayList->多线程下会出现 并发修改异常
-        解决方案：1.Vector 本质就是加了 synchronized
-                2.Collections.synchronizedList()
-                3.copyOnWriteArrayList
-   2.HashSet->多线程下会出现 并发修改异常
-        解决方案：1.Collections.synchronizedSet()
-                2.copyOnWriteArraySet
-   3.HashMap->多线程下会出现 并发修改异常
-        解决方案：1.Collections.synchronizedMap()
-                2.concurrentHashMap()
-
-HashSet底层？
-   1.底层就是HashMap,值为HashMap的key, value是一个固定值,所以hashSet不可以重复
-
-函数式接口
-   1.supplier 提供者:只有返回值没有参数
-   2.consumer 消费者:只有参数没有返回值
-   3.function 函数  :传入一个类型返回另一个泛型
-   4.Predicate 运算符：传入一个值返回true和false
