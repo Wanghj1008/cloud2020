@@ -55,8 +55,9 @@ Collections工具类： 提供了很多静态方法,例如Sort对list集合排�
     3.扩容完毕调用 arraycopy 方法进行数组复制.浅拷贝
     追问：为什么 数组MAX_ARRAY_SIZE 等于 Integer.MAX - 8 ？
         因为数组需要额外存储元数据信息,所以数组最大大小为 Integer.MAX - 8
-2.
-
+2.StringBuffer和StringBuilder扩容机制
+    1.无参构造默认存放16个字符,有参String类型默认String长度+16个字符,有参int类型默认是设置的int值大小 。扩容大小为原始*2+2   之所以加2是因为拼接后末尾存在多于字符
+3.ThreadLocal扩容
 
 
 
