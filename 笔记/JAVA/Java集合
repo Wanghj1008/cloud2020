@@ -1,13 +1,25 @@
-Iterable接口(迭代器)： 实现此接口表示对象可迭代,常用方法 foreach 和 Iterator进行迭代
-    自定义只需要实现 Iterable的Iterator方法创建一个Iterator类拥有便利的hasNext和next方法即可
+Iterable接口(迭代器)：
+    1.实现此接口的对象可以进行迭代(foreach、Iterator)
+    2.自定义迭代器：需要实现Iterable的Iterator方法就可以使用hasNext和next
+1.迭代器和for循环的区别？
+    1.for循序可以通过下标访问指定元素,而迭代器通过链表next访问下一个元素
+    2.迭代器兼容性强,如果list采用for循环如果集合换成set就需要修改代码,而迭代器无需修改
+2.Iterator与ListIterator(一般使用fro循环--方式遍历)区别如下：
+    ListIterator只能对list集合遍历并且支持逆向遍历(因为有下标),Iterator可以对List、set遍历,不支持双向遍历
+3.fail-fast 与 fail-safe 有什么区别？
+    1.fail-fast:快速失败,遍历过程中其他线程修改了集合就会报错
+    2.fail-safe:安全失败,会对即可拷贝一份遍历,所以不会报错
 ---------------------------------------------------------------------------------------------------------------
 Collection 接口(集合框架): 提供了一些通用方法让子类自己实现(add、remove)
 Set集合： 无序不可重复,只能设置一个null
     1.HasSet：基于哈希表,使用Hash算法存储和查询元素,底层就是HashMap,值为HashMap的key, value是一个固定值(Object对象),所以hashSet不可以重复
     2.LinkedHashSet:是HasSet子类,在HasSet基础上增加了一个链表,所以他是有序的
-    3.TreeSet是SortedSet接口的唯一实现类，是基于二叉树实现的。
-    4.EnumSet：专门为枚举设计的集合,放入元素必须是枚举,集合元素是有序的
-    1.copyOnWriteArraySet
+    3.TreeSet：是基于二叉树实现的。
+1.HashSet 的实现原理？
+    内部使用HashMap存储数据,value为object对象,因为HashMap无序所以hashSet无序,线程不安全,允许有一个null值,
+2.HashSet 怎么保证元素不重复的？
+    通过对key计算hash找到数组对应位置使用equals进行比较,如果存在返回false,不存在进行添加
+
 List集合: 可以设置null值 有序可重复
     1.ArrayList 和 LinkedList 的区别？
         1.ArrayList基于数组,LinkedList基于双向链表,索引查询快于指针移动
@@ -19,34 +31,77 @@ List集合: 可以设置null值 有序可重复
     3.Array 和 ArrayList 有何区别？什么时候更适合用 Array？
         1.ArrayList只能包含对象,Array可以包含基本数据类型
         2.ArrayList可以动态扩容,并且提供了多种方法,Array需要指定大小,超过会报错
-        场景：确定长度的时候可以用Array
+        场景：处理基本数据类型且不变的数据采用array可以防止拆装箱,提高性能
     4.Vector 和 ArrayList 区别？
         1.Vector所有方法都加锁线程安全但是效率低,一般不会使用
-    5.CopyOnWriteArrayList
 Queue
+    SynchronousQueue同步队列:进去一个元素，必须等待元素取出 才能继续存放元素
+    blockingQueue阻塞队列：一边存 另一边取
+    AbstractQueue：非阻塞队列
+    Deque双端队列：两边都可以存取
 SynchronizedCollection
     1.Collections.synchronizedList()
     2.Collections.synchronizedSet()
     3.Collections.synchronizedMap()
 ---------------------------------------------------------------------------------------------------------------
 Map接口(集合框架):表示一组键值对形式
-    1.HashMap 和 HashTable 的区别？
-        1.HashTable基于哈希表,本身是同步的(性能低),不支持空键空值
-        2.HashMap不是同步的,性能高,并且支持空键空值
-    TreeMap: 红⿊树
-    HashTable:                不允许空key,底层hashcode方法为空会抛空指针 HashMap如果key为空会转换成0调用hashcode方法
-    HashMap: 数组+链表/红⿊树   允许空key空value 不可重复,key相同覆盖
-    LinkedHashMap: 数组+链表/红⿊树+双向链表
-    ConcurrentHashMap: 数组+链表/红⿊树
+2.HashMap的构造方法
+    1.判断初始容量如果小于0抛异常  2.加载因子小于0抛异常   3.初始容量超过最大值2^30赋值最大  4.tableSizeFor寻找最近的2的幂次方值
+3.HashMap的resize方法执行过程(Map初始化和扩容使用)
+    1.如果table为空则为初始化,采用默认16和0.75进行初始化
+    2.如果table不为空则为扩容
+        1.判断旧数组长度是否>=最大数组,如果是将阈值改成最大值,就是以后不触发扩容
+        2.旧数组扩容两倍小于最大数组,并且旧数组容量>=16则阈值的关系刚好是2倍,直接*2,否则的话需要重新使用新数组*装载因子计算
+    3.使用新容量创建数组将旧数组数据遍历到新数组
+        1.next为空说明是一个空链表,重新计算hash位置存入新数组
+        2.next不为空,可能是链表或者红黑树（JDK8扩容采用e.hash & oldCap ==0进行拆解链表或红黑树）
+            1.JDK7为链表,重新计算hash放到新数组
+            2.JDK8链表或者红黑树,拆解后一部分下标不变,一部分e.hash+oldCap为新下标,如果拆解后红黑树的个数<=6则会转换成链表
+    问题：JDK7的resize会出现环状形成死锁,JDK8通过改变下标已经修复,但是依旧是线程不安全的,并发下推荐使用ConcurrentHashMap
+4.HashMap的put方法执行过程
+    1.判断数组是否为空,如果数组为空执行resize初始化数组
+    2.计算hash判断node是否为空,如果为空创建一个新node存入数组,不为空说明产生hash冲突
+        1.判断key是否存在,存在进行替换操作,返回旧值,不存在判断是树还是链表
+        2.如果为树,按照红黑树的规范进行节点增加,保持树的平衡
+        3.如果为链表,遍历找到next为空的进行插入,判断链表长度是否>8且数组长度大于64,则转换成红黑树(数组长度小于64则发生扩容不会转红黑树)
+    3.判断put后空间是否>=阈值进行扩容操作
+    扩展：put最后afterNodeInsertion方法是干什么？
+        1.提供给子类LinkedHashMap实现的方法,用来移除最早放入Map的对象
+5.HashMap的get方法执行过程
+    1.如果table为空直接返回null,计算hash判断数组位置是否为空,不为空遍历树或者链表用equals比较,不存在返回null存在返回值
+    问题：无法判断某个key是否存在map中,因为如果key的值也为null会混淆
+6.为什么装载因子是0.75
+    经过统计7-8发生冲突的概率都小于百万分之一,所以7-8直接都可以,因为0.75即3/4可以优化位运算,效率比乘法高所以采用0.75
+7.HashMap 的 size 为什么必须是 2 的整数次方？
+    HashMap中使用indexFor方法计算key在数组索引位置,代码是hash和length-1的与运算。
+    2的整数次方-1二进制全为1可以计算到所有索引位置,如果二进制出现0会导致数组部分位置永远计算不到,数据分布不均匀
+8.HashMap 和 HashTable 的区别？
+    1.HashMap线程不安全,,HashTable线程安全,不可以空键空值会抛异常而hashMap空键转换成0计算hash所以可以空键空值
+    2.初始化容量和扩容大小都不同,hashmap初始化16扩容2倍。
 
-Collections工具类： 提供了很多静态方法,例如Sort对list集合排序(需要对象实现 Comparable 实现 compareTo方法)、获取线程安全的集合对象、获取集合最大最小值
-
-
-3.copyOnWrite原理
-    add方法是加锁的,写的时候不在原有数据上操作,而是复制出一份当写完毕将指针指向新元素,初始大小为0,每次复制会进行+1操作 所以不需要扩容 但是依然需要arraycopy的拷贝
-    缺点：1.消耗内存,每次add都会复制数组  2.因为读不加锁,所以保证数据最终一致性。 如果A线程读还没读完的时候  B线程将集合清空但是指针没有改变 A还是会读取到集合数据
-
-
+1.ConcurrentHashMap 的实现原理是什么？(类似mysql的myisam和innodb引擎的行锁表锁)
+    1.JDK7采用分段锁,将数组分段锁定,JDK8使用cas和synchronized只对头节点进行锁定,提高性能
+    2.采用volatile 修饰value和next保证可见性
+2.ConcurrentHashMap的put方法原理
+    1.key和value为空抛异常,不为空进入自旋锁
+    2.如果数组为空进入初始化,计算hash找到数组对应位置采用cas交换,交换完毕退出自旋锁结束
+    3.如果遇到扩容,当前线程会参与执行扩容,对数组进行分片扩容,最小分片数16提高CPU使用率
+    4.上述都不是则发生hash冲突,对头节点加锁,链表对所有key遍历存在覆盖不存在最后插入,>8切换红黑树。树的话进行节点增加
+3.ConcurrentHashMap的get方法原理
+    1.计算hash判断数组对应位置值是否相同,相同返回,不相同判断树还是链表进行对应的查找,查询不到返回null
+4.ConcurrentHashM的size方法
+    获取到的是一个接近值,并发高的时候好像采用数组处理的
+5.HashMap、HashTable、ConcurrentHashMap
+    hashMap线程不安全允许空建空值，其他两个线程安全,不允许空建空值。HashTable对整个map加锁,ConcurrentHashMap只对头节点加锁提高性能
+1.LinkedHashMap 的实现原理?
+    LinkedHashMap采用双向链表增加顺序性,LinkedHashMap使用hashMap提供的三个回调函数实现插入顺序和访问顺序
+---------------------------------------------------------------------------------------------------------------
+Collection 和 Collections 有什么区别？
+    Collection是一个集合接口,提供了一些通用的方法,子类包含List、Set、Queue、SynchronizedCollection
+    Collections是一个工具类,提供了一些对集合处理的方法 如：排序、最大最小值、获取线程安全集合等
+CopyOnWriteArrayList、CopyOnWriteArraySet原理
+    1.add方法加锁,写的时候复制一份进行写入,写入完替换原来数据,写阻塞保证线程安全。初始大小为0每次复制会进行+1所以不需要扩容
+    缺点：1.每次add都要复制数组,消耗内存  2.读不加锁,会出现脏数据只能保证最终的数据一致
 ---------------------------------------------------------------------------------------------------------------
 扩容机制
 1.List扩容机制
@@ -58,16 +113,4 @@ Collections工具类： 提供了很多静态方法,例如Sort对list集合排�
 2.StringBuffer和StringBuilder扩容机制
     1.无参构造默认存放16个字符,有参String类型默认String长度+16个字符,有参int类型默认是设置的int值大小 。扩容大小为原始*2+2   之所以加2是因为拼接后末尾存在多于字符
 3.ThreadLocal扩容
-
-
-
-
-
-
-
-
-
-
-
-
-
+4.HashMap扩容：见上述resize方法,初始化和扩容都会调用这个方法
