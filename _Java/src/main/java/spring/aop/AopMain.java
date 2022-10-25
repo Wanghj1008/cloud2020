@@ -1,4 +1,4 @@
-package aop;
+package spring.aop;
 
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import proxy.CglibProxyFactory;

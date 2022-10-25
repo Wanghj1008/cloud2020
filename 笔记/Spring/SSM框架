@@ -8,17 +8,6 @@ SSM原理流程：
     总结：低耦合高内聚的思想其实就是将系统分成多个模块分而治之的思想。对系统来说将会有更高的可靠性.系统升级微服务也轻松一些
 Spring： 开源的轻量级框架,简化应用程序开发,降低耦合度。
     1.IOC(控制反转):让Spring帮助创建对象以及管理对象之间的依赖关系,降低对象间耦合度
-        容器初始化过程：
-            1.XML方式
-                1.创建 ClassPathXmlApplicationContext 调用构造方法时,
-                    一、先是调用顶层父构造方法对部分属性初始化
-                    二、调用父类setConfigLocations设置传入属性值,Spring配置文件路径
-                    三、调用父类refresh方法对xml中bean进行载入封装
-                        1.判断是否存在Spring容器,存在销毁然后创建,保证refresh创建的时新的容器
-                        2.通过路径将XML解析成文档对象,然后封装程key-value存入一个Map中,这个过程加锁保证线程安全. key为String value为BeanDefinition（内部封装 单例、多例、参数）
-            2.注解方式
-                1.配置自动扫描路径,启动时会根据路径对所有类进行扫描
-                2.直接将含注解的bean注册到容器中
         Bean实例化参数配置：
             1.scope(默认单例)  注解方式：@Scope(value = WebApplicationContext.SCOPE_SESSION,  proxyMode =ScopedProxyMode.INTERFACES)
                 1.singleton：单例 ：每一个bean只有一个实例。Spring创建就会被加载,生命周期和Spring一致。
@@ -50,9 +39,16 @@ Spring： 开源的轻量级框架,简化应用程序开发,降低耦合度。
             8.Repository|Service|Controller:DAO、业务层、控制层特殊的注解,作用和Component相同
             9.Configuration和Component区别：
                 官方解释：1.加载方式不同   //todo 2.Configuration会进行cglib代理(简化就是获取bean 一种获取到的是代理对象  一种获取到的原始对象)
-    2.AOP(切面编程): 代码重复部分抽出来,通过动态代理技术在不改变源码基础上进行代码增强  常用于：权限控制、日志处理、事务等
+    2.AOP(切面编程): 通过为目标类织入切面的方式,实现对目标类功能的增强  常用于：权限控制、日志处理、事务等
+        1.按照织入切面的时间划分
+            1.运行期织入：使用JDK或CGLib动态代理运行期间织入切面进行增强
+            2.编译期织入：比较少见,需要使用特殊的编译器在编译期进行织入进行增强
+            3.类加载期织入：通过自定义类加载器或者转换器将切面织入到目标类然后将修改后的class文件交给JVM加载,简称LTW
+        2.Spring如何实现LTW
+            1.META-INF下创建aop.xml,和原来写AOP区别就是我们不需要在LTW的切面上加Component注解,因为aop.xml里面有织入,配置文件开启LTW即可
+            JDK实现LTW：实现ClassFileTransformer重写addTransformer 然后JVM参数增加-javaagent代理参数
         1.相关注解
-            1.Aspect(切面)： 会包含一些切点以及相应的增强
+            1.Aspect(切面)： 会包含多个切点以及相应的增强
                 1.Before前置通知：目标方法调用前调用通知方法
                 2.After后置通知：目标方法调用后调用通知方法
                 3.After-returning最终通知：目标方法成功执行之后调用通知方法  (异常不执行)
@@ -74,6 +70,14 @@ Spring： 开源的轻量级框架,简化应用程序开发,降低耦合度。
         多个AOP执行先后顺序？
             1.xml通过order属性配置   2.注解使用order注解  3.实现类ordered重写getOrder方法实现多个AOP按序执行,order越小越先执行
             执行过程中切面顺序和多个过滤器一致,最先开始的切面最后结束！！！！
+        AOP源码：
+            1.当我们使用注解开启AOP时,Spring会找到AOPjar里面的Spring.handler配置文件找到对应处理器,处理器初始化方法中有注解对应的解析器
+                1.aop-config：使用配置方式配置切面切面
+                2.
+            2.AspectJAutoProxyBeanDefinitionParser解析器的parse方法
+                1.如果不存在的话会创建自动代理创建类internalAutoProxyCreator 作用：后续进行切面的织入
+                2.读取标签中的属性值设置到BeanDefinition中,例如强制使用CGLIB代理
+                3.extendBeanDefinition：对注解中的子节点的处理
     3.事务控制：  Spring事务本质上是数据库对事务的支持,没有数据库的支持,Spring是无法提供事务这个功能的
         1.原生JDBC与SpringJDBC区别：
             1.源生JDBC使用事务： 1.获取连接 2.setAutoCommit开启事务  3.执行业务sql  4.commit提交/rollback回滚事务   5.关闭连接   实际是通过binLog或redLog实现的
@@ -122,35 +126,98 @@ Spring： 开源的轻量级框架,简化应用程序开发,降低耦合度。
 本来可以new对象,为什么要使用Spring IOC呢？
    1.主要好处就是bean的集中管理,降低耦合度  其次Spring提供了一整套Bean的生命周期管理,对于方法增强也有AOP处理
 Spring Bean： 生命周期
-    1.Spring启动时会扫描注解/XML/JavaConfig把需要管理的bean封装成BeanDefinition对象,然后统一放到beanDefinitionMap中,key就是beanName值就是BeanDefinition
-    2.BeanFactoryPostProcessor 工厂后置处理器可以对Bean元数据进行修改,XML占位符就是他的子类注入进去的,一般用的比较少。 敏感数据比如密码之类的可以在这一层进行解密使用  Configuration注解类的加载成beanDefinitionMap
-    3.InstantiationAwareBeanPostProcessor 感知Bean实例化处理器 父类是BeanPostProcessor。 通过AbstractAutowireCapableBeanFactory#createBean触发执行
-        触发机制：Bean实例化之前会检查是否存在该接口,并触发下述1接口,1接口任何一个返回非null都会导致当前Bean生命周期缩短
-        1.postProcessBeforeInstantiation: 在Bean实例化方法之前执行.  如果返回null就会执行doCreateBean进行实例化(内部有一个方法判断如果不存在构造或者多个构造的匹配方案)
-            1.返回值决定后续实例化是否执行，如果返回空继续执行后续实例化等方法,如果返回AOP代理对象,生命周期会缩短,只执行postProcessAfterInitialization完成Bean加载,也不继续执行销毁方法
-            2.作用就是替换普通实例化Bean,主要应用与框架层面,使用代理类替换普通类。 如果是我们日常业务中想要替换Bean,Spring提供了一个适配器类InstantiationAwareBeanPostProcessorAdapter
-        2.postProcessAfterInstantiation：在bean实例化之后,初始化之前执行. 当前该Bean可能部分属性还没有设置值
-            1.当前Bean结果返回true或false会直接影响当前Bean后续3是否执行,各Bean之间互不影响
-        3.postProcessProperties：上述第二步结果为true,并且有一个check方法为true 的时候才会执行。是两个条件,可以给Bean属性赋值,也可以对xml的注入参数做修改
-        4.postProcessPropertyValues: 已经被标注@Deprecated，Spring5.1被postProcessProperties取代。
-    4.上述3如果没有缩短生命周期,接下来就执行Set依赖注入
-    5.依赖注入之后,初始化之前可以在目标Bean上实现一些感知方法   具体回调方式如下两种
-        1.invokeAwareMethods中通过判断类型直接进行回调的方法 例如:BeanNameAware、BeanFactoryAware、BeanClassLoaderAware
-        2.通过BeanPostProcessor#postProcessBeforeInitialization方法实现的 例如：ApplicationContextAware
-        问题：为什么之前在方法内,后面采用BeanPostProcessor方式实现回调？
-             这个我也不太清楚,可能是Spring升级 采用修改关闭,扩展开放原则所以采用扩展方式添加！！！   加载顺序：第一种先执行回调.
-    6.BeanPostProcessor：初始化阶段,实际初始化阶段和5(感知回调)都在初始化Bean中完成,执行顺序  invokeAwareMethods->下1->上2->下2
-        1.postProcessBeforeInitialization：调用初始化方法之前执行,Spring一些感知方法的回调就是通过这个执行的！
-        2.postProcessAfterInitialization:调用初始化方法之后执行,
-    7.生命周期接口
-        1.InitializingBean:自定义初始化执行的时候都会进行感知方法回调,所以可以对前面获取的对象放心使用。 还可以通过注解,XML配置实现完成配置！执行顺序不重要,都是初始化一般不会写多个！！
-        2.DisposableBean:自定义销毁方法执行！容器关闭,调用close就可以触发
+    1.通过web.xml配置ContextLoaderListener(Spring入口)和contextConfigLocation(Spring配置文件路径)
+        1.父类ContextLoader初始化,父类静态方法通过ContextLoader.properties文件拿到默认的XmlWebApplicationContext
+        2.contextInitialized开始构建IOC容器
+            1.createWebApplicationContext:创建应用上下文,如果web.xml没有通过contextClass配置则拿到的就是默认的XmlWebApplicationContext,通过反射进行实例化
+            2.configureAndRefreshWebApplicationContext配置和刷新应用上下文
+                1.对应用上下文ID设置,对Spring配置文件路径设置,
+                    1.通过分隔符分割成数组进行多个配置文件加载   2.使用环境属性值替换占位符,环境为空会使用jndi创建 例 ${path}
+                2.提供了一个扩展方法,可以在web.xml里面配置contextInitializerClasses初始化类,Spring容器创建之前会加载执行初始化方法
+                3.执行refresh方法：真正到了Spring IOC容器的创建
+        3.contextDestroyed销毁IOC容器
+    2.首先是(prepareRefresh)准备刷新方法,提供扩展方法,可以获取到环境然后自定义去设置环境变量和必须校验的值,校验失败启动报错
+        1.初始化设置环境变量：类似web.xml中的init-param
+        2.可以设置必须校验的值：继承ClassPathXmlApplicationContext重写 initPropertySources 方法将必须值设置到环境中,启动就会校验
+    3.obtainFreshBeanFactory()获取刷新BeanFactory方法,解析所有Spring配置文件,将bean封装成BeanDefinition对象
+        1.如果beanFactory存在,销毁单例Bean,关闭BeanFactory,重新创建一个新的BeanFactory。
+        2.定制BeanFactory,子类重新可以设置是否允许循环依赖,是否允许同名覆盖。 具体作用不太了解,网上资源较少
+        3.loadBeanDefinitions：根据路径读取xml配置文件,解析成Document对象,遍历节点通过进行封装。 beanDefinitionMap、beanDefinitionNames、aliasMap
+        额外补充:
+            1.文档命名空间验证模式:xds(目前使用) | dtd(停止更新)
+            2.多环境开发可以对配置文件进行环境设置,通过web.xml的spring.profiles.active指定环境
+            3.内部区分处理自定义命名空间和默认命名空间,如果是自定义命名空间可能需要用户实现一些接口或者配置,最终都是对Bean的装载,自定义多包涵handler和对应解析器
+    4.prepareBeanFactory准备BeanFactory方法主要就是对BeanFactory的属性封装,核心的就是注册BeanPostProcessor
+    5.postProcessBeanFactory:web整合中注册作用域和上下文配置 //todo
+    6.invokeBeanFactoryPostProcessors 执行工厂后置处理器：可以对Bean元数据进行修改,
+        1.实例化执行BeanFactoryPostProcessor
+            XML占位符就是他的子类注入进去的。 场景：加密敏感数据可以在这一层解密
+        2.实例化执行BeanDefinitionRegistryPostProcessor：是上面的子类,执行优先级高,可以通过这个方法注册一些BeanFactoryPostProcessor
+            Spring+Mybatis中MapperScannerConfigurer就是通过这个找到目录下的所有类封装成 BeanDefinition 加载到 BeanFactory 中的
+        3.排序：对自定义多个扩展类进行按序执行
+            先执行实现了PriorityOrdered  然后执行实现了Ordered 然后执行没有实现接口的BeanDefinitionRegistry  最后执行 BeanFactoryPostProcessor
+    7.registerBeanPostProcessors注册Bean后置处理器,将所有BeanPostProcess添加到BeanFactory中,存在先移除再添加保证排序。
+    8.initMessageSource初始化国际化(国际化文件必须是messageSource,因为内部通过messageSource去查找Bean)
+    9.initApplicationEventMulticaster初始化应用程序事件广播器,Spring提供了事件发布和事件监听机制,后面registerListeners注册监听器
+        如果用户自定义了事件广播器就用自定义的,如果没有创建一个默认事件广播器放到一级缓存,清空二级和三级缓存,默认广播器内部提供了监听器注册和发布事件遍历执行监听器
+        1.ApplicationEvent事件:创建一个类继承ApplicationEvent创建事件
+        2.ApplicationEventPublisher事件发布者：ApplicationContext实现了ApplicationEventPublisher,所以可以直接用ApplicationContext发布事件
+        3.ApplicationListener事件监听者：监听到事件发布进行
+    10.onRefresh方法在SpringBoot中内嵌Tomcat启动
+    11.finishBeanFactoryInitialization：完成BeanFactory初始化方法,对剩余非懒加载单例Bean的实例化操作,也是SpringIOC容器创建的核心
+        1.嵌入值解析器注册(用于解析注解的属性值)：如果没有创建一个默认的解析器
+        2.LoadTimeWeaverAware感知加载织入方法,简称LTW和AOP代理有关,这个代理和JDK、CGLib不同,都是代理的一种实现
+        3.freezeConfiguration冻结方法,注册的BeanDefinition不会被修改,因为下一步要进行Bean的实例化了
+        4.preInstantiateSingletons实例化单例Bean方法
+            1.先将beanDefinitionNames放到集合进行遍历,非抽象非懒加载的单例Bean,如果是Bean工厂需要加&调用getBean方法  区别:&apple获取的是工厂本身,而apple获取的是Bean
+            2.当所有Bean都创建完成会重新循环一次找到实现了SmartInitializingSingleton(敏捷初始化单例)的Bean然后执行回调函数
+                作用:Bean创建完后通过回调做一些事情
+    12:getBean方法(doGetBean)
+        1.transformedBeanName解析BeanName方法：解析别名,去掉FactoryBean的&前缀
+        2.getSingleton：尝试从缓存获取BeanName对应实例
+            1.先从一级缓存查询,如果一级缓存没有并且正在创建Bean的集合也没有的话返回null
+            2.从二级缓存查询,如果存在返回实例对象,不存在查询三级缓存,三级缓存存在通过getObject获取实例放入二级缓存,删除三级缓存,返回实例对象
+            解决循环依赖核心：二级缓存三级缓存提前暴露BeanFactory,最后因为单例所以引用也不会变,创建完后也不会产生问题
+        3.如果缓存有： 见下4.5
+            1.如果是Factory会从factoryBeanObjectCache(工厂对象缓存)中获取,为空使用getObject创建,放入工厂缓存中返回
+        4.如果缓存没有
+            1.检查循环依赖
+            2.如果存在父工厂尝试用父工厂来创建这个BeanName的实例
+            3.获取所有依赖(getDependsOn)的Bean,进行循环依赖检查,调用getBean创建实例
+            4.根据不同作用域进行实例创建(createBean),创建完毕后添加到一级缓存 删除二级缓存
+                1.内部增加前置后置方法对缓存进行处理,前置方法放入缓存,后置方法清空缓存,创建之前缓存中存在的话说明产生了循环依赖。
+            5.判断实例是否是FactoryBean 如果不是将实例对象对象返回即可,如果是的话需要通过getObject获取对象
+    13.createBean方法
+        1.InstantiationAwareBeanPostProcessor感知Bean实例化处理器,如果存在执行前置方法,前置方法返回不为空则生命周期缩短执行初始化的后置方法
+            作用：主要应用与框架层面,使用代理类替换普通类。 如果是我们日常业务中想要替换Bean,Spring提供了一个适配器类InstantiationAwareBeanPostProcessorAdapter
+        2.docreateBean方法;
+            1.createBeanInstance:创建实例返回instanceWrapper,内部判断工厂方法创建实例还是构造方法创建实例(默认构造器执行还是指定构造器执行)
+            2.applyMergedBeanDefinitionPostProcessors: 内部包含@Autowire注解对元数据解析
+            3.如果BeanName不在一级缓存中,将他放入三级缓存：对Bean的提前曝光,解决循环依赖
+            4.postProcessAfterInstantiation：执行实例化后置方法,该方法的结果会影响属性注入方法(postProcessProperties)是否执行
+            5.initializeBean执行初始化Bean方法
+                1.检测感知方法进行执行
+                    1.invokeAwareMethods中通过判断类型直接进行回调的方法 例如:BeanNameAware、BeanFactoryAware、BeanClassLoaderAware
+                    2.通过初始化前置方法实现的回调 例如：ApplicationContextAware
+                    问题：为什么之前在方法内,后面采用BeanPostProcessor方式实现回调？
+                         这个我也不太清楚,可能是Spring升级 采用修改关闭,扩展开放原则所以采用扩展方式添加！！！   加载顺序：第一种先执行回调.
+                2.初始化前置方法执行：postProcessBeforeInitialization
+                3.初始化方法执行
+                4.初始化后置方法执行：postProcessAfterInitialization
+            6.判断是否存在销毁方法进行相应的封装,容器关闭,调用close就可以触发
+    14.finishRefresh完成上下文刷新方法
+        1.初始化了默认的生命周期处理器,执行自启动的Bean,就是实现了SmartLifecycle的Bean 并且isAutoStartup属性必须为true。 内部引入了Phased优先级处理
+        2.发布事件
+MergedBeanDefinition合并Bean定义: 继承一个父类父类就是父定义,该方法是线程安全的,并且内部将FactoryBean类型的&去掉
+    日常使用中,XML配置的Bean会被封装成GenericBeanDefinition,注解方式配置的Bean会被封装成ScannedGenericBeanDefinition但是实例化过程需要RootBeanDefinition
+    1.存在父定义,先使用父定义创建一个Bean然后将我们的BeanDefinition覆盖进去返回
+    2.不存在父定义,已创建的就是一个RootBeanDefinition,只需要拷贝一份返回即可
+    3.不存在父定义,已创建的不是一个RootBeanDefinition,使用我们已有BeanDefinition构建一个RootBeanDefinition返回
+
 1.理解JAVA对象和Spring对象的区别
     1.java对象创建对象是使用堆中的类对象(只描述了类基本信息)作为模板创建
     2.Spring创建的BeanDefinition(包含了作用域,构造传入值和set传入值,初始化方法名、销毁方法名,如果是工厂类型实例还会有工厂名和工厂方法名)
-BeanPostProcessor 注册时机与执行顺序?那么Spring是如何保证BeanPostProcessor在我们的业务Bean之前初始化完成呢？
-    1.源码中对他提供的和我们自己写的Bean做了划分,加载的时候也是先注册 BeanPostProcessor(Bean后置处理器) 然后才会对单例非懒加载的Bean进行注册
-    2.每种类型中执行顺序又可以通过实现类进行加载排序   1.PriorityOrdered   2.Ordered   3.什么都不加    执行顺序按照123执行。 内部优先级越小越早执行
+
 三级缓存： doCreateBean中采用三级缓存解决循环依赖问题
     一级缓存(singletonObjects)：存放的是所有创建好的单例Bean
     二级缓存(earlySingletonObjects)：完成实例化，但是还未进行属性注入及初始化的对象 由三级缓存放入
@@ -177,8 +244,7 @@ BeanFactory和ApplicationContext有什么区别？
             增强1.MessageSource 国际化  2.ResourceLoader资源访问(绝对路径相对路径处理)  3.AOP增强
         2.BeanFactory：懒加载  优点：首次运行速度快 缺点:配置错误只有访问时候才能发现,而且过程中可能涉及加载影响速度
             加载：XmlBeanFactory
-        3.FactoryBean:工厂Bean,使用工厂模式,提供工厂方法来实例化Bean！
-
+        3.FactoryBean:工厂Bean,使用工厂模式,提供工厂方法来实例化Bean！在中间件中使用比较多,只需要执行getObject就能获取到对象
 -----------------------------------------------------------------------------------------------
 Mybatis：持久层框架,可以将参数映射到配置的SQL进行执行,结果集映射成Java对象返回！
     优点：1.相比于JDBC减少冗余代码  2.SQL写到XML与程序分离,使用灵活耦合度低

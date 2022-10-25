@@ -1,6 +1,7 @@
 package spring.生命周期;
 
 import org.springframework.beans.factory.BeanNameAware;
+import org.springframework.beans.factory.SmartInitializingSingleton;
 
 /**
  * @author 王昊杰
@@ -10,7 +11,7 @@ import org.springframework.beans.factory.BeanNameAware;
  * @date 2022/9/4 23:54
  * @Copyright
  */
-public class User1Bean implements BeanNameAware {
+public class User1Bean implements BeanNameAware, SmartInitializingSingleton {
     private String name;
 
     public User1Bean() {
@@ -35,5 +36,10 @@ public class User1Bean implements BeanNameAware {
     @Override
     public void setBeanName(String s) {
         System.out.println("6. 调用 BeanNameAware.setBeanName() 方法");
+    }
+
+    @Override
+    public void afterSingletonsInstantiated() {
+        System.out.println("执行User1Bean SmartInitializingSingleton 的回调函数");
     }
 }

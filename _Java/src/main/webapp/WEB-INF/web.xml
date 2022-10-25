@@ -5,6 +5,12 @@
 		<param-value>classpath*:application.xml</param-value>
 	</context-param>
 
+	<!--有如下配置 spring在执行refresh之前会执行下方类的初始化方法-->
+	<!--<context-param>
+		<param-name>contextInitializerClasses</param-name>
+		<param-value>org.springframework.web.context.WebApplicationContext</param-value>
+	</context-param>-->
+
 	<listener>
 		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
 	</listener>

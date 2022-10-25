@@ -9,14 +9,14 @@
 		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
 		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
     <!--    注解扫描-->
-    <context:component-scan base-package="spring,aop,transaction">
+    <context:component-scan base-package="spring,transaction">
         <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
     </context:component-scan>
 
 
     <!--    代理模式相关配置 start-->
     <bean id="foodService" class="proxy.FoodServiceImpl"/>
-    <!--    <bean id="aopMain" class="aop.AopMain"/>-->
+    <!--    <bean id="aopMain" class="spring.aop.AopMain"/>-->
     <!--    代理模式相关配置 end-->
 
     <!--生命周期相关Bean配置   Start-->
@@ -44,6 +44,10 @@
     <!--引入database.properties文件、配置数据源连接-->
     <context:property-placeholder location="classpath:database.properties"/>
 
+    <!--配置LTW  需要VM参数 AOP文件要在META-INF下面aop.xml
+    -javaagent:spring-instrument-5.2.2.RELEASE.jar  -javaagent:aspectjweaver-1.9.7.jar-->
+<!--    <context:load-time-weaver aspectj-weaving="autodetect"/>-->
+
     <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource"
           destroy-method="close" init-method="init" lazy-init="true">
         <description>shopManagerment库连接</description>
@@ -64,4 +68,17 @@
         <!-- basePackage属性指定自动扫描mapper接口所在的包 -->
         <property name="basePackage" value="spring.mybatis.mapper"/>
     </bean>
+
+    <!--合并Bean 定义 开始-->
+    <bean id="fatherBean" class="spring.合并Bean定义.FatherBean">
+        <property name="familyName" value="张" />
+        <property name="name" value="三" />
+        <property name="age" value="60" />
+    </bean>
+    <bean id="childBean" class="spring.合并Bean定义.ChildBean" parent="fatherBean">
+        <property name="name" value="三儿子" />
+        <property name="age" value="18" />
+    </bean>
+    <!--合并Bean 定义 end-->
+
 </beans>
