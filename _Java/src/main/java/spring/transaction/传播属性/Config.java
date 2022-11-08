@@ -1,4 +1,4 @@
-package transaction.传播属性;
+package spring.transaction.传播属性;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;

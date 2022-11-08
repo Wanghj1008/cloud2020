@@ -16,6 +16,11 @@
    2.使用 interrupt 生成中断标记,使用isInterrupt判断是否存在终端标记,return中止
    3.当线程处于  sleep,wait,join 的时候,如果使用interrupt会抛出异常终止
    4.使用volatile共享变量实现线程中断  while(共享变量)  设置false可中断循环
+Thread.interrupt()原理： 不会强制线程退出,因为可能导致数据不安全,所以通过通知让他自行结束
+    只是一个通知,如果线程在阻塞状态,会抛出InterruptedException异常  如果线程正在运行,只是将中断标志设置为true,执行的线程判断标志位如果为true就自行中断
+shutdown和shutdownNow区别
+    shutdown:不接收新任务,但会执行完当前正在执行和阻塞队列中的任务
+    shutdownNow：不接收新任务,丢弃阻塞队列中的任务,尝试中断正在运行的任务(不推荐使用 会造成线程安全问题)
 线程常用的一些方法
     1.Join ： 如果一个线程A执行了thread.join()语句，其含义是：当前线程A等待thread线程终止之后才会继续执行
     2.wait,wait(long time):
@@ -26,11 +31,7 @@
     7.setDaemon：设置当前线程为守护线程
     8.getPriority：设置优先级  也可以get获取优先级
     9.isAlive判断线程是否激活状态 (阻塞,运行)
-Thread.interrupt()原理： 不会强制线程退出,因为可能导致数据不安全,所以通过通知让他自行结束
-    只是一个通知,如果线程在阻塞状态,会抛出InterruptedException异常  如果线程正在运行,只是将中断标志设置为true,执行的线程判断标志位如果为true就自行中断
 -------------------
-Thread.Start方法
-    1.首先start方法会首先调用C的start0方法,C会去操作底层和本地现场做一次绑定,当本地线程准备就绪后就会调run方法
 各种锁的理解：
     1.公平锁：非常公平 ，线程谁先来的谁限制性 不能插队
     2.非公平锁：不公平锁可以插队。比如一个任务三个小时。后来一个3s可以执行完。为了效率就让他插队。synchronized使用非公平锁

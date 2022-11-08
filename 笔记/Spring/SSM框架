@@ -27,18 +27,6 @@ Spring： 开源的轻量级框架,简化应用程序开发,降低耦合度。
             2.setter方法：优点：可以继承、设置默认值、用的时候进行注入  缺点：无法在对象构造完成后立刻使用 需要调用set方法  可以搭配Required注解强制要求使用者注入该属性
             3.接口注入：使用较少,因为强制被注入对象实现接口
             4.P指针注入(本质就是set)：配置文件使用较多 优点：代码整洁  缺点：可维护性不高,如果属性多会导致配置过长
-        依赖注入注解：
-            1.Autowired:按类型自动装配
-            2.Qualifier:不能单独使用,配合 Autowired按名称自动装配,需要Autowired后面增加装配名称
-            3.Resource：默认按名称装配,找不到按照类型装配！  Spring提供注解 但是实现需要引入第三方工具 javax.annotation.jar
-            4.Value：⽤于注⼊基本类型,可以标注在成员变量上,set方法上。不能标注构造方法上！！
-            5.Bean：作用在方法上,将方法返回的类注入到容器中
-            6.PathVariable：用来接收路径参数的注解
-            6.Configuration：等同于Bean.xml,通过annotationConfigApplicationContext加载,
-            7.Component:等同于application.xml,通过ClassPathXmlApplicationContext加载
-            8.Repository|Service|Controller:DAO、业务层、控制层特殊的注解,作用和Component相同
-            9.Configuration和Component区别：
-                官方解释：1.加载方式不同   //todo 2.Configuration会进行cglib代理(简化就是获取bean 一种获取到的是代理对象  一种获取到的原始对象)
     2.AOP(切面编程): 通过为目标类织入切面的方式,实现对目标类功能的增强  常用于：权限控制、日志处理、事务等
         1.按照织入切面的时间划分
             1.运行期织入：使用JDK或CGLib动态代理运行期间织入切面进行增强
@@ -61,29 +49,24 @@ Spring： 开源的轻量级框架,简化应用程序开发,降低耦合度。
             2.JoinPoint(连接点)：程序中某一行为,例如执行过程中所有字段、方法都是连接点。 Spring只支持方法类型连接点
             3.Pointcut(切点)：我们自定义要拦截的连接点组合就可以称为切点！！
             4.Weaving(织入):把切面增强内容应用到目标对象并创建代理对象的过程
-        2.代理对象生成时机？
-            1.初始化的时候会找到所有实现 BeanPostProcessor 的子类进行遍历执行初始化后置方法,其中一个就是实现AOP动态代理,内部会判断是否有增强
-            如果有增强方法就会通过class判断使用CGLIB还是JDK生成代理对象
-        3.为什么三级缓存解决AOP循环依赖问题？
-            由上述可知,初始化结束才能获取到代理对象,如果AB都需要对方代理对象,如果没有三级缓存,就会造成一方获取到的是原始对象,导致一个保存的原始对象和一级缓存的代理对象产生误差
-            而三级缓存内部其实提前调用了,初始化之后的方法获取代理对象.
         多个AOP执行先后顺序？
-            1.xml通过order属性配置   2.注解使用order注解  3.实现类ordered重写getOrder方法实现多个AOP按序执行,order越小越先执行
+            1.PriorityOrdered   2.注解使用order注解  3.实现类ordered重写getOrder方法实现多个AOP按序执行,order越小越先执行
             执行过程中切面顺序和多个过滤器一致,最先开始的切面最后结束！！！！
         AOP源码：
             1.当我们使用注解开启AOP时,Spring会找到AOPjar里面的Spring.handler配置文件找到对应处理器,处理器初始化方法中有注解对应的解析器
-                1.aop-config：使用配置方式配置切面切面
-                2.
-            2.AspectJAutoProxyBeanDefinitionParser解析器的parse方法
+            2.AspectJAutoProxyBeanDefinitionParser解析器的parse方法进行初始化后置方法的注册
                 1.如果不存在的话会创建自动代理创建类internalAutoProxyCreator 作用：后续进行切面的织入
                 2.读取标签中的属性值设置到BeanDefinition中,例如强制使用CGLIB代理
                 3.extendBeanDefinition：对注解中的子节点的处理
+        AOP流程解析：
+            1.当Bean加载初始化完毕后,Spring会执行所有初始化后置方法,当执行到AOP对应的后置方法就会查找所有定义的切面类(@Aspect)
+            2.创建切面类中定义的增强器@Around,并且根据切点表达式获取所有目标类创建AOP代理对象,创建时根据配置指定的JDK或CGLIB进行创建
     3.事务控制：  Spring事务本质上是数据库对事务的支持,没有数据库的支持,Spring是无法提供事务这个功能的
         1.原生JDBC与SpringJDBC区别：
             1.源生JDBC使用事务： 1.获取连接 2.setAutoCommit开启事务  3.执行业务sql  4.commit提交/rollback回滚事务   5.关闭连接   实际是通过binLog或redLog实现的
             2.Spring事务: 不需要手动开启提交或回滚事务,只需要在业务类上增加transaction注解,通过AOP对方法进行增强实现事务的操作
         2.事务的传播属性： 多个事务同时存在的时候,Spring如何处理这些事务的行为。 属性定义在 TransactionDefinition中
-            1.REQUIRED：调用者有事务,则共用一个,调用者没有事务自己创建一个事务。  事务包含的代码有异常对包含代码进行回滚
+            1.REQUIRED：调用者有事务,则共用一个,调用者没有事务自己创建一个事务。  共用事务无论内层还是外层异常全都进行回滚
             2.REQUIRES_NEW：调用者有事务,自己新建一个事务。两个事务独立。 里面事务错了外面事务可以捕获异常方式决定外层事务回滚还是提交。如果继续抛异常就回滚 自己解决就提交
             3.SUPPORTS: 调用者有事务,则共用一个,调用者没有事务. 自己也不使用事务
             4.MANDATORY(基本不用): 当前必须存在一个事务,没有就报异常
@@ -116,6 +99,15 @@ Spring： 开源的轻量级框架,简化应用程序开发,降低耦合度。
         4.事务的失效情况
             1.如果事务中存在多线程,事务会失效,多个线程会产生多个sqlSession,多个session之间相互隔离
             2.同一server中调用方法  https://blog.csdn.net/nieyanshun_me/article/details/74898401  https://blog.csdn.net/doctor_who2004/article/details/51814476
+            3.未指定RollbackOn,只有RuntimeException和error才会触发回滚,阿里巴巴代码规范倡议是显示指定rollbackOn为Exception
+            4.数据库引擎不支持
+        5.事务原理:
+            @EnableTransactionManagement开启事务管理器,注解内部import注入了一个选择器,选择器根据代理还是事务进行对应Bean的注册,其中包括事务拦截器TransactionInterceptor
+            通过事务注解匹配器匹配每个方法是否包含事务注解,包含的话生产代理对象,执行具体方法时根据是否包含注解决定是否进入事务拦截器
+                1.获取事务属性放入缓存,事务注解可设置参数(超时时间,传播属性,隔离级别,回滚异常类型(推荐使用Exception,不指定位RuntimeException& Error))
+                2.获取事务管理器,如果配置指定则获取指定管理器,如果没有获取默认事务管理器,也是真正执行提交和回滚的地方
+                3.执行目标方法,try()catch捕获异常 发生异常后会进行判断是否为rollbackFor指定的异常,
+            最终事务事务会根据sqlSession进行判断,如果mybatis和spring的sqlSession是同一个则交给Spring提交或回滚,不是同一个交给Mybatis处理
     4.方便集成测试
     5.降低API使用难度,对很多API进行封装提供Template调用
 单例多例模式下线程安全问题：
@@ -133,7 +125,7 @@ Spring Bean： 生命周期
             2.configureAndRefreshWebApplicationContext配置和刷新应用上下文
                 1.对应用上下文ID设置,对Spring配置文件路径设置,
                     1.通过分隔符分割成数组进行多个配置文件加载   2.使用环境属性值替换占位符,环境为空会使用jndi创建 例 ${path}
-                2.提供了一个扩展方法,可以在web.xml里面配置contextInitializerClasses初始化类,Spring容器创建之前会加载执行初始化方法
+                2.提供了一个扩展方法,可以在web.xml里面配置contextInitializerClasses初始化类,Spring容器创建之前会加载执行初始化方法 实现ApplicationContextInitializer
                 3.执行refresh方法：真正到了Spring IOC容器的创建
         3.contextDestroyed销毁IOC容器
     2.首先是(prepareRefresh)准备刷新方法,提供扩展方法,可以获取到环境然后自定义去设置环境变量和必须校验的值,校验失败启动报错
@@ -223,10 +215,6 @@ MergedBeanDefinition合并Bean定义: 继承一个父类父类就是父定义,�
     二级缓存(earlySingletonObjects)：完成实例化，但是还未进行属性注入及初始化的对象 由三级缓存放入
     三级缓存(singletonFactories)：提前暴露的一个单例工厂.拿到的是一个工厂对象,通过它实例对象每次可能都不一样！！！Bean就不是单例了
         解决:二级缓存中存储的就是从这个工厂中获取到的对象实例。 当使用三级缓存getObject获取就会移除三级缓存放入二级缓存
-    流程:
-        当A完成构造方法调用,将Bean放入三级缓存,进行属性注入时候发现B没有被加载,所以进行B的创建,B创建时候发现要注入A,尝试一级缓存获取\二级获取,最后从三级缓存拿到一个没有初始化完全的Bean
-        然后B完成依赖注入和初始化操作后将B放入一级缓存,继续返回A中注入B完成依赖注入和初始化,最后将A放入一级缓存。 因为B拿到A是一个引用,所以最终B中的A也是一个初始化完全的Bean
-    循环依赖不支持情况？   1.放入三级缓存的前提是执行了构造方法,所以构造器的循环问题不能解决   2.
 Spring循环依赖如何解决？
     1.首先区分Spring中出现循环依赖是什么情况
         1.AOP代理对象产生循环依赖
@@ -237,6 +225,9 @@ Spring循环依赖如何解决？
             因为多例情况下不走缓存,所以只能变成单例解决
         4.单例构造器循环依赖
             1..使用@Lazy注解，延迟加载   2.先加载的构造器改为Set注入
+1.Spring 为什么不用二级缓存来解决循环依赖问题？
+    1.Spring设计原则 实例化->属性注入->初始化 代理对象时初始化后置方法创建的,如果使用二级缓存流程需要进行变动,实例化->创建代理对象->初始化
+        所以Spring采用三级缓存,只有AOP发生循环依赖是才进行变动提前获取代理对象。
 BeanFactory和ApplicationContext有什么区别？
     1.ApplicationContext是BeanFactory的一个子接口,所以ApplicationContext可以理解为是BeanFactory基础上的一个增强
         1.ApplicationContext:采用一次性加载  优点：1.如果配置错误启动就会报错 2.运行过程中速度快,因为不涉及太多加载 缺点：一次性加载太多比较吃内存,首次加载很慢
@@ -245,6 +236,23 @@ BeanFactory和ApplicationContext有什么区别？
         2.BeanFactory：懒加载  优点：首次运行速度快 缺点:配置错误只有访问时候才能发现,而且过程中可能涉及加载影响速度
             加载：XmlBeanFactory
         3.FactoryBean:工厂Bean,使用工厂模式,提供工厂方法来实例化Bean！在中间件中使用比较多,只需要执行getObject就能获取到对象
+Spring中如何让两个bean按顺序加载？
+    1.使用@DependsOn指定依赖关系    2.bean工厂后置处理器提前加载   3.后加载的类构造器注入先加载的类,这样就需要去先加载属性类
+Spring IoC 容器构建完毕之后执行一些逻辑，怎么实现?
+    1.使用applicationLister事件监听器,监听ContextRefreshedEvent上下文刷新事件
+    2.SmartLifecycle实现类,加载完毕会进行执行,内部包含一个参数(isAutoStartup )必须为true
+依赖注入注解：
+            1.Autowired:按类型自动装配,装配对象不能为null,如果要允许需要使用required设置为false
+            2.Qualifier:不能单独使用,配合 Autowired按名称自动装配,需要Autowired后面增加装配名称
+            3.Resource：Spring提供注解,默认按名称装配,找不到按照类型装配！
+            4.Value：⽤于注⼊基本类型,可以标注在成员变量上,set方法上。不能标注构造方法上！！
+            5.Bean：作用在方法上,将方法返回的类注入到容器中
+            6.PathVariable：用来接收路径参数的注解
+            6.Configuration：等同于Bean.xml,通过annotationConfigApplicationContext加载,
+            7.Component:等同于application.xml,通过ClassPathXmlApplicationContext加载
+            8.Repository|Service|Controller:DAO、业务层、控制层特殊的注解,作用和Component相同
+            9.Configuration和Component区别：
+                官方解释：1.加载方式不同   //todo 2.Configuration会进行cglib代理(简化就是获取bean 一种获取到的是代理对象  一种获取到的原始对象)
 -----------------------------------------------------------------------------------------------
 Mybatis：持久层框架,可以将参数映射到配置的SQL进行执行,结果集映射成Java对象返回！
     优点：1.相比于JDBC减少冗余代码  2.SQL写到XML与程序分离,使用灵活耦合度低

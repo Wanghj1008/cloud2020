@@ -1,4 +1,4 @@
-package transaction.传播属性;
+package spring.transaction.传播属性;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -32,7 +32,7 @@ public class UserInfoDaoImpl implements UserInfoDao {
         params.put("name", user.getName());
         params.put("age", user.getAge());
         int id = insert.executeAndReturnKey(params).intValue();
-        throw new RuntimeException("测试异常");
-//        return id;
+//        throw new RuntimeException("测试异常");
+        return id;
     }
 }

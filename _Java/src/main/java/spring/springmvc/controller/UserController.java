@@ -5,7 +5,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import spring.mybatis.service.UserService;
-import transaction.传播属性.UserInfoServiceImpl;
+import spring.transaction.传播属性.UserInfoServiceImpl;
 
 /**
  * @author 王昊杰

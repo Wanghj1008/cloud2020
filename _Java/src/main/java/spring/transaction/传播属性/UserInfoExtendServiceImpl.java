@@ -1,4 +1,4 @@
-package transaction.传播属性;
+package spring.transaction.传播属性;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -12,7 +12,7 @@ public class UserInfoExtendServiceImpl {
     @Autowired
     private UserInfoDao userInfoDao;
 
-    @Transactional(propagation = Propagation.NEVER)
+    @Transactional(propagation = Propagation.SUPPORTS)
     public void serviceA() {
         User user = new User();
         user.setAge(100);
@@ -20,7 +20,7 @@ public class UserInfoExtendServiceImpl {
         userInfoDao.save(user);
     }
 
-    @Transactional(propagation = Propagation.NEVER)
+//    @Transactional(propagation = Propagation.NEVER)
     public void serviceB() {
         User user = new User();
         user.setAge(200);

@@ -1,4 +1,4 @@
-package transaction.传播属性;
+package spring.transaction.传播属性;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -11,7 +11,7 @@ public class UserInfoServiceImpl {
     private UserInfoExtendServiceImpl userInfoExtendService;
 
 
-//    @Transactional()
+    @Transactional()
     public void service() {
         userInfoExtendService.serviceA();
         userInfoExtendService.serviceB();

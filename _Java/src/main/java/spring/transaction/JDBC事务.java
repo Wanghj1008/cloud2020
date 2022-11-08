@@ -1,4 +1,4 @@
-package transaction;
+package spring.transaction;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

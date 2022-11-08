@@ -1,11 +1,11 @@
-package transaction.传播属性;
+package spring.transaction.传播属性;
 
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 /**
  * @author 王昊杰
  * @version V1.0
- * @Package transaction.传播属性
+ * @Package spring.transaction.传播属性
  * @Email: 1624302283@qq.com
  * @date 2022/9/12 22:13
  * @Copyright
