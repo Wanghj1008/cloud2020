@@ -1,120 +1,77 @@
-MYSQL 高级
-MYSQL优化分析：
-  一、数据库设计
-    1.合理使用三大范式。如可以提高效率可以适当降低范式.包保留适当冗余
-        第一范式：原子性。字段不可再分
-        第二范式：唯一性。记录要有唯一标识。一般是设计主键
-        第三范式：去冗余。去重多表中重复字段
-    2.合理创建 主键、外键、实体之间关系(一一,一多)
-  二、sql语句本身的优化
-    1.如何定位效率低的SQL
-        1.慢查询日志      1.修改配置文件My.ini文件增加,在mysqlId中2,3,4
-           1.5.5默认未开启,需要手动开启,如果不是调优需要,一般不建议开启。非常耗性能。
-             8.0默认开启。可以修改慢查询日志位置。但是重启失效。如果要重启有效可以配置 my.ini文件设置慢日志位置
-           1.了解各种SQL的执行频率 show [session|global] status    session表示当前会话的所有sql   global表示上次启动至今的所有sql
-           2.show variables like 'long_query_time'  查看慢查询默认允许时间    set 【global】long_query_time=1 修改全局时间超过1不包括1
-           3.SET GLOBAL log_output = 'FILE,TABLE';  默认为文件 如果改成表则记录在mysql数据库 slow_log表中
-           4.show variables like 'slow_query_log'   查看慢查询是否开启   set global slow_query_log='on' 设置开启。必须为全局不是session
-           5.SHOW VARIABLES LIKE '%slow_query_log_file%' 查看慢查询日志的保存位置
-           6.select * from mysql.slow_log 查看mysql数据库的慢查询记录
-           7.show session status like 'com_select'  查看查询 update和delete  的次数
-           8.显示慢查询次数  show status like ‘slow_queries’;
-           9.show status like ‘uptime’ 当前启动时间
-           10.日志分析工具mysqlDumpSlow：命令 mysqldumpslow --help
-                1.-s 排序方式  2.-c 访问次数  3.-l锁定时间  4.-r 返回记录 5.-t 查询时间 6.al 平均锁定时间
-                7.ar 平均返回记录数 8. at 平均查询时间 9.t 返回前面多少条数据 10.g 后面搭配正则表达式,大小写不敏感
-        2.show profiles：     默认关闭,开启会保存最近15条SQL   show variables like 'profiling' 查看开启状态
-           1. show profiles   可以用来分析当前会话中语句执行的资源消耗情况
-           2.show profile for query 2;     可以根据query_ID查看具体的sql分析
-           3.show 【cpu,IO,ALL】 for query 2;     可以根据query_ID查看具体的sql分析
-                1.出问题的因素：  create tmp table  创建临时表
-                2.copy on tmp table on disk 把内存的临时表复制到磁盘
-                3.locked  锁了          4.converting heap to MyISAM  查询结果大,内存不够放 放进磁盘
-        3.全局查询日志：
-            mysql 配置文件中配置
-                1.开启 general_log=1
-                2.输出格式 log_output=file
-            sql语句实现
-                1.set global general_log = 1
-                2.set global log_output=table    此后所有的sql语句都会存到 general — —log 表中
-        4.sql_trace：
-           1.一般是默认开启。
-           2.我们可以设置跟踪开启,停止,可以查看跟踪信息.默认生成5个跟踪文件,重启或达到最大值(文件都满了)会重新生成.删除最早的文件
-  三、数据库分表分库
-  四、
-  五、数据库读写分离
-  六、存储过程
-    1.合理使用存储过程也能提高性能，但存储过程的缺陷是SQL语句是死的。
-  七、配置MySQL本身参数
-    1.可以适当调大sort_buffer_size内存的大小
-    2.可以适当调大max_length_for_sort_date。
-    3.适当提高最大连接数 show variables like '%max_connections%'; 高占用内存也大所以适当
+1.优化分析：
+    1.sql写的不好,join连接表太多或者没有使用索引,或者索引失效
+    2.参数设置(缓冲、线程数)不恰当
+        1.可以适当调大sort_buffer_size内存的大小
+        2.可以适当调大max_length_for_sort_date。
+        3.适当提高最大连接数 show variables like '%max_connections%'; 高占用内存也大所以适当
 
-
-优化分析：
-  1.sql慢问题：
-     1.sql写的不好.连接多而且没有建索引或者没用索引
-     2.索引失效。 单值索引 create index inx_user_name on user(name)  复合索引 create index inx_user_name on user(name,Email)
-  2.执行或等待时间长问题：
-     1.关联查询太多join(设计缺陷或不得已的需求)
-     2.服务器调优及参数设置(缓冲、线程数)不恰当
-常见的Join查询
-  sql执行顺序：
-     1.人写的 select distinct * from  表名  join 表  where 条件  group 分组 having分组后筛选  order 排序  limit 分页
-     2.机读 from 连接条件 连接表 where条件 分组 分组后筛选 查询想要的字段  去重  排序  分页
-  七种连接：1.左全部            select  *  from a  left join b on a.id=b.id
-            2.右全部 左连接     select  *  from a  right join b on a.id=b.id
-            3.交叉部分：        select  *  from a  inner join b on a.id=b.id
-            4.左表去右表交叉    select  *  from a  left join b on a.id=b.id  where b.id is  null
-            5.右表去左表交叉    select  *  from a  right join b on a.id=b.id  where a.id is  null
-            6.全连接       select  *  from a  full join b on a.id=b.id    但是可以使用联合查询 union 将1，2 连接  自动去重
-            7.全连接去重复   select  *  from a  full join b on a.id=b.id where a.id is null or b.id is null 或者 union 将4 5连接
+2.如果查找执行慢的SQL？
+    1.慢查询日志,不推荐默认开启,消耗性能
+        1.mysql8默认开启,可以通过My.ini配置文件设置输出到文件或者(slow_log)表中,默认时间阈值为10s
+    2.show profiles query ID： 默认关闭,一般在测试环境使用,保存最近15条SQL执行时消耗资源情况,
+        1.通过status出现的情况,分析SQL是否需要优化
+            1.create tmp table  创建临时表
+            2.locked 锁
+            3.copy on tmp table on disk 把内存的临时表复制到磁盘
+            4.converting heap to MyISAM  查询结果大,内存不够放 放进磁盘
+    3.全局查询日志：
+        mysql 配置文件中配置
+            1.开启 general_log=1
+            2.输出格式 log_output=file
+        sql语句实现
+            1.set global general_log = 1
+            2.set global log_output=table    此后所有的sql语句都会存到 general — —log 表中
+    4.sql_trace：
+        1.一般是默认开启。
+        2.我们可以设置跟踪开启,停止,可以查看跟踪信息.默认生成5个跟踪文件,重启或达到最大值(文件都满了)会重新生成.删除最早的文件
+    5.SHOW PROCESSLIST查看所有运行的线程,找到存在问题的线程进行优化,也可以查看连接数判断是否需要进行限流
 
 3.Explain： explain + SQL语句
-   1.使用explain关键字可以模拟优化器执行SQL语句。分析语句是否存在问题
-   2.使用explain 的查询结果字段分析
-       1.id:select 查询的序列号,包含一组数字,表示查询中执行select子句或者操作表的顺序
-           1.id相同：执行顺序由上至下
-           2.id不同：如果是子查询,id的序号会递增,id值越大优先级越高,越先被执行
-           3.id相同不同都有：id大的先执行。id一样的顺序执行
-       2.select_type  查询的类型,主要用来区别  普通查询、联合查询、子查询等复杂查询
-           1.SIMPLE：简单的查询,不包含子查询和union联合查询
-           2.Primary：查询中如果包含子查询，最外层的查询被标记为 Primary
-           3.subQuery：在select或者where列表中 被包含的子查询
-           4.derived：from中包含的子查询被标记为衍生表,会把查询结果放在一个临时表
-           5.union：第二个select出现在union之后.被标记为联合。若union包含在from子句的子查询中,外层的select将被标记为4.衍生表
-           6.union result：使用union产生的结果集
-       3.table：显示这一行数据是来自那个表
-       4.type：访问类型排列   最好到最差   system》const》eq_ref》ref》range》index》all  查询最少到range级别  最好到ref
-           1.system：表只有一行记录(等于系统表)。是const特例  平时不会出现  可以忽略
-           2.const：通过索引一次就找到了,const用于比较主键索引和唯一索引。
-                    因为只匹配一行,所以很快将主键至于where条件中,Mysql能将该查询转换为一个常量
-           3.eq_ref：唯一性索引扫描,对于每个索引键,表中只有一条记录匹配。常见于主键或者唯一索引扫描
-           4.ref：非唯一的索引扫描,返回匹配单独值的所有行
-           5.range：只检索指定范围的行,使用一个索引来选择行,key列显示使用了那个索引    一般就是>、<  、between and 、in
-           6.index：全索引扫描。只遍历索引树
-           7.all：遍历全表查询数据
-       5.possible_keys：显示可能应用在这张表中的索引,一个或者多个，但是不一定被实际使用到
-       6.key：实际使用的索引  如果为null则没有使用
-           1.覆盖索引：我使用1,2两个字段创建索引,而查的也是12字段。不需要通过索引去查找其他信息就是覆盖索引
-       7.key_len：表示索引中使用的字节数,    相同结果下 key_len越小越好
-       8.ref：就是你的条件后面的值。没有=null  有的话分常量const  和  对于值的库 表 字段名
-       9.rows：读取行数
-       10.extra额外：包含不适合再其他列显示 但是十分重要的额外信息
-           1.using fileSort：无法利用索引完成排序操作,而是使用了一个外部排序。叫文件排序  常见：group by与组合索引个数 顺序不吻合
-           2.using temporary：mysql对结果排序使用了临时表。常见于 order by、group by。
-           3.using index：如果同时出现了using where 说明索引被用来执行查找。没有出现using where 说明索引用来读取数据 而不是查找数据
-           4.using where 表示使用了where条件
-           5.user joinbuffer：使用了连接缓存
-           6.impossible where：where条件不可能成立   name=王昊杰 and  name=王洁
-4.Explain的作用
-   1.通过查询的结果id可以判断表的加载顺序
-   2.通过select_type可以判断查询语句有哪些操作类型   union、子查询 等
-   3.判断哪些索引可以使用
-   4.判断哪些索引被实际使用了
-   5.通过ref可以判断表之间的引用
-   6.通过rows每张表有多少行被查询出来
-Order by优化：
+    1.使用explain关键字可以模拟优化器执行SQL语句。分析语句是否存在问题
+    2.使用explain 的查询结果字段分析
+        1.id:select 查询的序列号,包含一组数字,表示查询中执行select子句或者操作表的顺序
+            1.id相同：执行顺序由上至下
+            2.id不同：如果是子查询,id的序号会递增,id值越大优先级越高,越先被执行
+            3.id相同不同都有：id大的先执行。id一样的顺序执行
+        2.select_type  查询的类型,主要用来区别  普通查询、联合查询、子查询等复杂查询
+            1.SIMPLE：简单的查询,不包含子查询和union联合查询
+            2.Primary：查询中如果包含子查询，最外层的查询被标记为 Primary
+            3.subQuery：在select或者where列表中 被包含的子查询
+            4.derived：from中包含的子查询被标记为衍生表,会把查询结果放在一个临时表
+            5.union：第二个select出现在union之后.被标记为联合。若union包含在from子句的子查询中,外层的select将被标记为4.衍生表
+            6.union result：使用union产生的结果集
+        3.table：显示这一行数据是来自那个表
+        4.type：访问类型排列   最好到最差   system》const》eq_ref》ref》range》index》all  查询最少到range级别  最好到ref
+            1.system：表只有一行记录(等于系统表)。是const特例  平时不会出现  可以忽略
+            2.const：通过索引一次就找到了,const用于比较主键索引和唯一索引。
+                     因为只匹配一行,所以很快将主键至于where条件中,Mysql能将该查询转换为一个常量
+            3.eq_ref：唯一性索引扫描,对于每个索引键,表中只有一条记录匹配。常见于主键或者唯一索引扫描
+            4.ref：非唯一的索引扫描,返回匹配单独值的所有行
+            5.range：只检索指定范围的行,使用一个索引来选择行,key列显示使用了那个索引    一般就是>、<  、between and 、in
+            6.index：全索引扫描。只遍历索引树
+            7.all：遍历全表查询数据
+        5.possible_keys：显示可能应用在这张表中的索引,一个或者多个，但是不一定被实际使用到
+        6.key：实际使用的索引  如果为null则没有使用
+            1.覆盖索引：我使用1,2两个字段创建索引,而查的也是12字段。不需要通过索引去查找其他信息就是覆盖索引
+        7.key_len：表示索引中使用的字节数,    相同结果下 key_len越小越好
+        8.ref：就是你的条件后面的值。没有=null  有的话分常量const  和  对于值的库 表 字段名
+        9.rows：读取行数
+        10.extra额外：包含不适合再其他列显示 但是十分重要的额外信息
+            1.using fileSort：无法利用索引完成排序操作,而是使用了一个外部排序。叫文件排序  常见：group by与组合索引个数 顺序不吻合
+            2.using temporary：mysql对结果排序使用了临时表。常见于 order by、group by。
+            3.using index：如果同时出现了using where 说明索引被用来执行查找。没有出现using where 说明索引用来读取数据 而不是查找数据
+            4.using where 表示使用了where条件
+            5.user joinbuffer：使用了连接缓存
+            6.impossible where：where条件不可能成立   name=王昊杰 and  name=王洁
+4.Explain 的作用
+    1.通过查询的结果id可以判断表的加载顺序
+    2.通过select_type可以判断查询语句有哪些操作类型   union、子查询 等
+    3.判断哪些索引可以使用
+    4.判断哪些索引被实际使用了
+    5.通过ref可以判断表之间的引用
+    6.通过rows每张表有多少行被查询出来
+
+5.Order by优化：
     1.order by 子句使用最左前列。或者搭配where 满足最左前列都可以使用using index 否则会产生文件外排序
     2.如果使用using fileSort有两种算法
         实现原理：将数据拿到内存排序区进行排序。如果内存装不下会进行数据分块,再对各数据块进行排序.最后将各个数据块合并成一个结果集
@@ -129,6 +86,24 @@ Order by优化：
     开启了binlog日志,mysql默认不允许创建函数。 将默认开启
     show variables like 'log_bin_trust_function_creators'
     SET GLOBAL log_bin_trust_function_creators = 1;
+6.MySQL 数据库 CPU 飙升到 500% 的话他怎么处理?
+    1.通过top命令查看是什么进程导致的CPU飙升
+    2.如果是mysql导致的下查看线程数是线程过多适当进行限流
+    3.如果是SQL执行问题,通过Explain分析SQL具体情况进行修改(无索引或没有命中、数据库参数不合理等)
+7.说说 MySQL 的主从复制?主从复制中涉及到哪三个线程？
+    1.从节点IO线程:连接主节点,请求从指定位置读取binlog日志
+    2.主节点log dump线程：接收到IO线程的请求后读取指定位置之后的binlog日志信息和位置信息
+    3.从节点IO线程：获取到binlog日志信息放入relayLog和masterInfo中,masterInfo用于告诉告诉主节点下次读取binlog日志位置
+    3.从节点SQL线程：检测到relayLog变化后会进行binlog日志解析,并且在当前数据库执行
+8.异步复制存在数据丢失？
+    1.主节点不会主动下发,等待从节点发请求,当主节点宕机,如果数据没有下发从节点并且存在故障转移,那么数据将会永久丢失。  MYSQL8默认复制策略、性能快。
+    2.同步复制：主节点写入到binlog中后需要同步到所有从节点,并且都执行成功后。主节点才处理新的请求, 保证数据安全但是性能低
+    3.半同步复制：主节点写入binlog后数据未提交前发送给所有从节点,只要有一个从节点将数据存入relayLog中且返回ACK(确认字符)。主节点就接收新请求。  保证数据不丢失,性能也比同步复制高
+9.主从复制延迟的原因？解决方案？
+    1.采用异步复制    2.网络延迟    3.主节点并发高,从节点只有一个SQL线程跟不上
+    解决方案：1.网络优化  2.从库使用固态提高IO性能   3.并行复制：开启多个SQL线程执行relayLog,通过事务ID判断是否在同一个事务组,在一个组可以进行并行处理提高效率
+10.为什么要进行读写分离？谈谈你对数据库读写分离的理解？
+    1.通过部署多台数据库,主机进行写操作,从机进行读操作来提高主机写入性能
 -------------------------------------------------------------------------------------------
 MYSQL锁
     1.从数据操作类型分
@@ -144,7 +119,7 @@ MYSQL锁
         1.行锁：只对一行加锁,不影响其他行。开销大，加锁慢；会出现死锁；锁定粒度小，发生锁冲突的概率低，并发度高。  Innodb采用索引使用行锁,索引失效会导致行锁变成表锁
         2.表锁：对整个表加锁,开销小，加锁快；不会出现死锁；锁定粒度大，发生锁冲突概率高，并发度最低。
         3.页锁：对一页数据加锁,开销和加锁时间介于行表锁之间。会出现死锁。并发度一般
-    3.行锁是怎么实现的？
+    3.行锁是怎么实现的？ //todo
         innodb通过索引字段加锁。通过页上位图处理 0表示无锁1有锁,而Oracle通过给数据行加锁实现
         所以当不使用索引时innodb行锁会变成表锁,如果两个普通索引都给同一个主键索引加锁会产生锁冲突,位图方式比数据行处理节约内存。
     4.间隙锁(GAP)
