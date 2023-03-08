@@ -73,7 +73,7 @@ Watch 监控事务：
   则提交事务,如果值被修改,则回滚事务。 乐观锁的思想,类似于判断版本。和多线程中CAS的原子引用的乐观锁类似。
   开启：  watch key    取消1.事务exec执行完毕。无论成功失败监控都取消 2.客户端推出 3.手动unwatch 取消
 Redis 的 Java 客户端有哪些？官方推荐哪个？
-    1.Jedis(提供丰富的redis指令)    2.Redisson(提供了看门狗,可重入锁等特性,但是支持命令少些,事务管道都不支持)   3.lettuce
+    1.Jedis(提供丰富的redis指令)    2.Redisson(基于分布式场景的解决方案)   3.lettuce
 整合Spring boot： 2.X版本后采用 lettuce
     Jedis：采用直连,多个线程操作是不安全的,避免不安全,加入jedis pool连接池，更像BIO模式
     lettuce:底层使用netty,实例可以在多个线程间共享,不存在线程不安全,可以减少线程数，更像NIO模式
