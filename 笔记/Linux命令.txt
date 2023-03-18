@@ -1,0 +1,23 @@
+文本编辑
+    编辑文本：vim|cat
+    显示行号：set nu
+    保存退出：:wq (shift+z+z)
+    不保存退出:q
+
+文件夹
+    递归拷贝文件夹：cp -r Mycat /usr/local：
+    创建文件夹：mkdir
+
+文件
+    从桌面复制文件到服务器：rz
+    从服务器复制文件到桌面：sz
+
+查找：    Permission denied表示没有权限
+    查找文件：find *.txt
+    查找对应目录test文件： find /home -name test
+
+6个不需要./在任意位置都可以启动的文件夹   bin  usr/bin  user/local/bin  sbin  usr/sbin  user/local/sbin
+
+firewall-cmd --add-port=223/tcp --permanent    添加永久开放的端口（例如：223端口）
+firewll-cmd --remove-port=80/tcp --permanent    关闭永久端口
+
