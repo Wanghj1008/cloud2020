@@ -78,8 +78,11 @@ Mybatis执行流程源码
 Mybatis都有哪些Executor执行器？  通过setting配置！作用范围都是一个sqlSession!  如果开启二级缓存会将执行器包装成缓存执行器！就是
     1.SimpleExecutor(默认)：执行数据库操作前，每次都会新建一个statement，然后执行数据库操作。
     2.ReuseExecutor：维护一个Map缓存,相同SQL会复用Statement
-    3.BatchExecutor：可以对增删改进行批处理,但是配置上不仅仅只是设置执行器,还有其他配置操作！  底层手动开启事务 然后SQL到批处理中  最后批量执行所有SQL  提交事务
+    3.BatchExecutor：可以对增删改进行批处理  底层：开启事务-->批量执行所有SQL-->提交事务
     4.缓存执行器：就是再原执行器的基础上增加了缓存处理
+Mybatis使用foreach批量插入的问题优化？
+    当使用批量插入的时候推荐使用批处理执行器,提高性能
+    使用Simple执行器不会对 Statement 缓存,每次都会重新创建,并且批量插入时字段个数和values个数也会影响性能(因为占位符和参数映射也很消耗性能)
 DefaultSqlSession线程不安全问题？
     1.因为DefaultSqlSession做不到每次请求创建一个新实例,如果多个请求共用一个,在一级缓存处可能导致并发冲突。
         因为操作不是同步的,一级缓存先会存一个空的Enum.然后执行查询。第二个请求发现缓存不为空就会获取进行强制类型转换 从而引发报错！

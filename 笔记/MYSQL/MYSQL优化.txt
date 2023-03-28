@@ -56,6 +56,10 @@
             2.using temporary：查询数据量大内存放不下通过临时表存储
             3.using index：单独出现说明读取的覆盖索引
             4.impossible where：where条件和having条件为false,比如(where 1!=1)
+    Explain Extended
+        在原有字段基础上增加分区(partitions)列,如果基于分区查询会显示访问的分区
+    Show Warnings
+        可以查看优化后的查询语句,例如 select * 会变成具体字段。从而看到优化器优化了哪些东西
 4.Explain 的作用
     1.通过type判断查询的类型,是否可以进行优化
     2.查看可以使用那些索引,实际使用了什么索引,数据查询了多少行
