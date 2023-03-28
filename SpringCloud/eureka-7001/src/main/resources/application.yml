@@ -1,0 +1,22 @@
+server:
+  port: 7001
+
+eureka:
+  instance:
+    hostname: www.eureka7001.com
+  client:
+    # 是否注册到 Eureka中
+    register-with-eureka: false
+    # 是否从 Eureka中 获取服务信息
+    fetch-registry: false
+    service-url:
+      defaultZone: http://www.eureka7002.com:7002/eureka/
+  server:
+    # 默认保护机制 默认开启(true)
+    enable-self-preservation: false
+    # 每60s清理一次无效[超过90s无心跳]节点
+    eviction-interval-timer-in-ms: 1000
+
+# hostname->集群的时候需要区分 实例名称 ->修改实例名称需要同时修改 host文件增加对应映射
+#           C:\Windows\System32\drivers\etc\host  增加127.0.0.1 实例名
+#

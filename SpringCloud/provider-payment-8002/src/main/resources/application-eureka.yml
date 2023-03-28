@@ -1,0 +1,35 @@
+server:
+  port: 8002
+
+spring:
+  application:
+    name: payment-service
+  datasource:
+    druid:
+      db-type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/springcloud?useUnicode=true&characterEncoding=UTF8&autoReconnect=true&serverTimezone=Asia/Shanghai
+    username: root
+    password: root
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.example.payment.dao
+
+eureka:
+  # 修改主机名
+  instance:
+    instance-id: payment8002
+    # Eureka 中放到对应实例上 显示 IP
+    prefer-ip-address: true
+    #eureka 向 server 发送心跳间隔(默认30)
+    lease-renewal-interval-in-seconds: 5
+    #如果 server 10s没收到心跳则会删除该服务(默认60)
+    lease-expiration-duration-in-seconds: 10
+  client:
+    # 是否注册进 Eureka
+    register-with-eureka: true
+    # 是否从 Eureka中 获取服务信息
+    fetch-registry: true
+    service-url:
+      defaultZone: http://www.eureka7001.com:7001/eureka/,http://www.eureka7002.com:7002/eureka/

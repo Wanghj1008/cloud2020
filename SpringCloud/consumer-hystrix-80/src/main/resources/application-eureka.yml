@@ -1,0 +1,31 @@
+server:
+  port: 80
+
+spring:
+  application:
+    name: Feign-service
+
+eureka:
+  instance:
+    instance-id: consumer80
+    prefer-ip-address: true
+  client:
+    # 是否注册进 Eureka
+    register-with-eureka: true
+    # 是否从 Eureka中 获取服务信息
+    fetch-registry: true
+    service-url:
+      defaultZone: http://www.eureka7001.com:7001/eureka/,http://www.eureka7002.com:7002/eureka/
+
+feign:
+  hystrix:
+    enabled: true
+hystrix:
+  command:
+    default:
+      execution:
+        timeout:
+          enabled: true
+        isolation:
+          thread:
+            timeoutInMilliseconds: 2000

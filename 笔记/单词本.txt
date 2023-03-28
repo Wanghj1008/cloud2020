@@ -1,0 +1,8 @@
+消费者：consumer
+生产者：provider  支付：payment
+发现：discovery
+
+
+
+
+位置,地址,定位：location
