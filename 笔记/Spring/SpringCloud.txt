@@ -1,10 +1,10 @@
 微服务: Spring Boot
-    将一个应用拆分成多个微服务,每个服务可以独立部署,服务之间通过http(Rest API、RPC)交互
+    将一个应用拆分成多个微服务,每个服务可以独立部署,服务之间通过http、RPC交互
     优点
     1.多个服务可采用不通技术栈  2.负载高时关闭非热点服务  3.部署快,修改bug只需要重启对应服务
     缺点
     1.微服务搭配分布式整体架构复杂,运维难度增加  2.工具类等不能共享,代码冗余增加
-分布式: Spring Cloud(基于HTTP协议 todo)
+分布式: Spring Cloud、Dubbo
     一个微服务部署在多台机器上,多台计算机组合部署一个应用,提高性能和可用性
     难点
     1.服务接口开放产生安全性问题  2.网络传输信息丢失  3.分布式产生的难点(服务发现、服务限流、负载均衡、链路跟踪等)
@@ -15,6 +15,19 @@
     2.服务自愈(服务器崩溃自动在其他计算机部署)
     3.自动化部署
     4.灰度发布(服务升级少部分替换,没问题全部服务替换)
+SpringCloud 和 Dubbo 区别？
+    Dubbo 采用 Zookeeper做注册中心、采用RPC方式远程调用、性能高但是服务熔断、降级不完善
+    Spring Cloud 可以自主选择组件、采用HTTP远程调用、性能不如Dubbo但是提供了多种分布式解决方案
+RestTemplate 和 RPC 区别？
+    1.RestTemplate采用HTTP协议,基于TCP协议,消息封装比较臃肿,发送速度慢.
+    2.RPC基于Socket,速度快效率高,典型代表Dubbo、WebSocket、ES集群间调用
+常用RPC远程调用框架有哪些？
+    1.httpclient   2.GRPC   3.dubbo   4.openFeign
+RPC实现原理？
+    1.采用TCP建立通讯-->通过IP+端口进行服务寻址-->对参数进行序列化进行网络传输-->收到后反序列化得到参数进行服务调用做出响应(代理增加响应发送)
+微服务之间如何独立通讯的?
+    同步通讯：Dubbo采用RPC、SpringCloud采用HTTP
+    异步通讯：采用消息队列
 --------------------------------------------------------------------------------------------------------
 版本选型：
 SpringBoot：
@@ -27,16 +40,6 @@ SpringCloud：
     Maven坐标：https://mvnrepository.com/
     SpringCloud下层依赖版本：https://start.spring.io/actuator/info
 技术选型 //todo
-SpringCloud 和 Dubbo 区别？
-    Dubbo采用Zookeeper做注册中心、采用RPC方式远程调用、Dubbo-monitor做服务监控、服务熔断降级不完善
-    Cloud可以采用Eureka|Consul|Nacos|ZK做注册中心、采用Rest API远程调用、增加服务熔断降级限流、服务网关、链路跟踪、消息总线等
-
-RestTemplate 和 RPC 区别？
-    1.RestTemplate采用HTTP协议,基于TCP协议,消息封装比较臃肿,发送速度慢.
-    2.RPC基于Socket,速度快效率高,典型代表Dubbo、WebSocket、ES集群间调用
-常用RPC远程调用框架有哪些？
-    1.httpclient   2.GRPC   3.dubbo   4.openFeign
-
 Eureka 2.X版本已经停止维护,用什么替换？
     1.ZK
     2.Consul 优点：1.基于Raft协议,比较简洁  2.同时支持HTTP和DNS协议,支持跨数据中心WAN集群  3.跨平台,支持 windows、Linux、Mac
@@ -48,10 +51,6 @@ Hystrix,进入维护 用什么替换？
     SpringCloud
 --------------------------------------------------------------------------------------------------------
 当前笔记依赖版本：SpringCloud H版 SpringBoot2.2.2
-
-怎么保证微服务架构的健壮性
-    1.服务注册与发现  2.服务调用  3.服务熔断  4.负载均衡   5.服务降级  6.服务消息队列   7.配置中心管理  8.服务网关
-    9.服务监控  10全链路跟踪   11.自动化构建部署   12服务定时任务调度
 
 Eureka 是什么？
     Eureka 是分布式服务注册中心,提供了服务治理和服务发现等功能
@@ -70,6 +69,8 @@ Eureka 自我保护机制
 
 ZK //todo
 Zookeeper 做注册中心,生成临时节点还是持久节点？ 临时
+Eureka 和 Zookeeper 区别？
+    1
 
 Consul 是什么？
     Consul 是分布式服务发现和配置管理系统,基于GO语言开发,提供了 服务治理、服务发现、配置中心、消息总线等功能
@@ -79,8 +80,8 @@ Consul 命令？
 
 CAP理论：
     一致性(Consistency):所有节点访问的数据一致
-    高可用性(Availability)：每次请求都可以得到响应,不管成功还是失败
-    分区容错性(Partition tolerance)：降低一致性要求,允许一定容错
+    高可用性(Availability)：节点出现异常其他节点提供服务,保证可用性
+    分区容错性(Partition tolerance)：允许出现分区导致数据不一致
     注：在分布式系统中,CAP不可同时满足,多节点联通情况下,肯定会出现断开连接的情况,断开时一致性和高可用性就不能同时满足
         CA：单机操作,满足一致性和高可用性系统,但是违背了分布式多节点的初衷
         CP：满足一致性和分区容错性,如金融行业的支付流程
