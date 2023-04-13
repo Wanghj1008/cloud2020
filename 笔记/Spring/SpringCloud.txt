@@ -15,8 +15,8 @@
     2.服务自愈(服务器崩溃自动在其他计算机部署)
     3.自动化部署
     4.灰度发布(服务升级少部分替换,没问题全部服务替换)
-SpringCloud 和 Dubbo 区别？
-    Dubbo 采用 Zookeeper做注册中心、采用RPC方式远程调用、性能高但是服务熔断、降级不完善
+SpringCloud 和 Dubbo 区别？ //todo 2023.04.09
+    Dubbo 采用 Zookeeper做注册中心、采用RPC方式远程调用、性能高因为数据二进制传输,比HTTP报文方式节约性能
     Spring Cloud 可以自主选择组件、采用HTTP远程调用、性能不如Dubbo但是提供了多种分布式解决方案
 RestTemplate 和 RPC 区别？
     1.RestTemplate采用HTTP协议,基于TCP协议,消息封装比较臃肿,发送速度慢.
@@ -54,7 +54,7 @@ Hystrix,进入维护 用什么替换？
 
 Eureka 是什么？
     Eureka 是分布式服务注册中心,提供了服务治理和服务发现等功能
-Eureka 服务治理是什么？
+Eureka 服务治理是什么？ //todo 2023.04.09
     服务注册中心：提供注册和发现功能
     服务提供者：提供服务的应用会将自身注册到注册中心
     服务消费者：根据注册中心进行服务发现,进行远程调用
@@ -67,7 +67,7 @@ Eureka 服务治理是什么？
 Eureka 自我保护机制
     防止网络阻塞导致服务被删除,如果30s没收到客户端心跳,Eureka并不会立刻清理客户端,依旧对该服务进行保留,如果丢失三次心跳则进行删除
 
-ZK //todo
+ZK //todo 2023.04.09
 Zookeeper 做注册中心,生成临时节点还是持久节点？ 临时
 Eureka 和 Zookeeper 区别？
     1
@@ -87,19 +87,19 @@ CAP理论：
         CP：满足一致性和分区容错性,如金融行业的支付流程
         AP：满足高可用性和分区容错性,如电商,互联网业务处理
 四个注册中心的区别：
-    Eureka:Java语言编写,实现高可用性和分区容错性,提供WEB界面管理
+    Eureka:Java语言编写,实现高可用性和分区容错性,支持HTTP协议,提供WEB界面管理
     zookeeper:Java语言编写,实现一致性和分区容错性
-    Consul：Go语言编写,实现一致性和分区容错性,提供WEB界面管理
-    Nacos: AP和CP可以切换,底层融合Ribbon实现负载均衡
+    Consul：Go语言编写,实现一致性和分区容错性,支持HTTP、DNS协议,提供WEB界面管理
+    Nacos: AP和CP可以切换,底层融合Ribbon实现负载均衡,支持HTTP、DNS、TCP协议,提供WEB界面管理,并且可以和Rubbo、k8s整合
 
 
-Ribbon 是什么？
+Ribbon 是什么？ //todo 2023.04.09
     主要提供客户端 负载均衡(Load Balance) +  远程调用(RestTemplate) 并提供了超时、重试等配置项
 负载均衡有哪些方式？
     Nginx服务器负载均衡:客户端将请求发送给Nginx,Nginx实现请求转发,从而实现负载均衡
     Ribbon客户端负载均衡：在调用微服务接口时,通过注册中心获取对应服务节点,通过负载均衡算法实现负载均衡
         1.先选择 注册中心集群中负载少的进行节点查询   2.找到所有节点根据负载均衡算法选择要使用的具体节点进行远程调用
-负载均衡算法有哪些？
+负载均衡算法有哪些？ 如何切换？在配置类重新注入IRule的Bean然后创建其他算法
     1.轮询算法(RoundRobinRule):默认算法,通过记录请求次数计算服务节点
     2.随机算法(RandomRuleO)
     3.重试算法(RetryRule):先按照轮询,服务调用失败选择可用服务重试
@@ -232,27 +232,83 @@ Config如何解决配置重复？
 什么是平台后端？
     用于数据聚合,数据分析,将服务发来的日志数据聚合,提供后续分析
 
+-------------------------------------------------------------------------------------------------------------
+Nacos(8848)服务注册中心、服务配置+BUS总线
+如何实现服务配置+BUG总线？
+    服务启动时,通过bootstrap拉取Nacos服务地址的公共配置,然后读取application封装自身其他配置
+    优势：当Nacos配置发送变动,客户端会自动刷新,不需要想BUG一样调用Post实现动态刷新
+Nacos中公共配置文件命名规范？
+    ${prefix}-${spring.profile-active}.${file-extension} 采用前述方式命名
+    1.prefix：默认实例名称[spring.application.name],也可以修改前缀【spring.cloud.nacos.cofig.prefix】
+    2.spring.profile-active：当前读取环境【dev、test】
+    3.file-extension：文件格式,目前只支持【yml、properties】
+Nacos如何进行多项目分类配置？
+    namespace（默认公共的为public） + group（默认Default_group） + dataID 进行多项目、多环境区分
+    1.namespace：用于区分部署环境,默认采用Public
+    2.groupID+dataID：逻辑上区分两个目标对象  默认集群(cluster)也是default
+    好处：
+        1.当我们部署异地多活时,可以通过组进行异地区分,服务在同一个组中调用可以降低网络延迟
+        2.通过namespace区分多项目,实现隔离
+Nacos集群和持久化配置：
+    自身携带嵌入式数据库 derby：
+    问题：集群模式下多个默认配置存放在多个内置的数据库中,数据一致性存在问题
+    解决方案：采用Mysql外部存储来支持集群的部署,目前只支持mysql的存储
+    切换方案：1.Nacos配置中包含[建库建表]SQL脚本  2.修改Nacos配置文件【application.properties】切换 mysql数据源
 
-服务配置：  微服务模块越来越多,很多配置文件会出现很多重复性操作
-nocas做服务配置：
-${prefix}-${spring.profile-active}.${file-extension}
-prefix:默认spring.application.name   也可以通过spring.cloud.nacos.cofig.prefix
-spring.profile-active:是当前环境profile 当spring.profile.active为空,就省略中间部分
-file-extension：文件格式 目前只支持properties和yml文件
-不需要在配置一个服务器端模块,nacos支持自动刷新.改完配置客户端就会自动拉取最新配置
-nocas新增功能  分类管理：namespace（默认公共的为public） + group（默认Default_group） + dataID
-  1.namespace：用于区分部署环境。
-  2.groupID+dataID：逻辑上区分两个目标对象  默认集群(cluster)也是default
-  3.根据启动环境读取相应环境的配置(dev,com.example.common.model.test)
-nacos集群和持久化配置：
-    1.自身携带嵌入式数据库 derby：
-        问题：所以启动多个默认配置下的nacos节点(集群),数据存在一致性问题
-        修改：采用集中式存储的方式来支持集群的部署,目前只支持mysql的存储
-nacos：linux集群配置
-   1.安装 切换mysql （修改config文件下的application.properties）
-   2.修改config文件下的cluster文件。  使用hostname命令获取实际linux中ens33的ip  后面写多个集群的各自端口号
-   3.修改启动startup.sh启动脚本。 1.加一个port参数2.最下面加- Dserver.port=${port}
-   4.启动命令后面拼接 -p 端口号
-   5.nginx配置
+
+Sentinel
+    分布式中提供的限流、熔断、降级、监控等功能,通过jar包即可启动控制台,不需要像 hystrix 自己配置监控模块运行
+Sentinel 如何启动控制台
+    1.下载Sentinel-dashboard.jar包到本地,通过java -jar启动,注意：默认采用8080端口、用户名密码都是Sentinel
+Sentinel 限流规则
+    资源名：唯一名称、默认请求路径
+    针对来源：可以通过配置指定哪个服务调用时进行限流,默认default不区分来源
+    阈值类型：1.QPS(每秒请求数量)  2.线程数(当调用API的线程数到达阈值限流)
+    是否集群：不需要集群
+    流量控制：
+        1.直接(API达到限流条件,直接限流)
+        2.关联(当关联的资源达到阈值,则限流自己)   场景：支付接口处理不过来、对订单接口进行限流
+        3.链路(针对某一链路进行限流)
+    流量效果：
+        1.快速失败(直接失败抛异常)
+        2.预热/冷启动(Warm UP)：冷因子(3).经过一段时间才将QPS提升到阈值  场景：秒杀系统开启瞬间可能导致系统崩溃,经过预热限流慢慢控制流量进来
+        3.排队等待：按照先后顺序进行处理,设置超时时间,超过响应失败
+Sentinel 熔断降级规则.
+    熔断降级会根据调用资源异常情况、超时情况进行判断,到达阈值后降级快速失败,防止雪崩,在接下来时间窗口期会熔断,窗口期结束恢复服务【没有hystrix 半开模式】
+    资源名：唯一名称、默认请求路径
+    降级策略
+        1.平均响应时间(RT): QPS大于5并且平均响应时间超过阈值发生降级,时间窗口内熔断,窗口期结束恢复服务
+        2.异常比例：QPS大于5并且异常比例超过阈值发生降级,时间窗口内熔断,窗口期结束恢复服务
+        3.异常数：每分钟异常数超过阈值发生降级,时间窗口内熔断,窗口期结束恢复服务
+Sentinel 热点规则限流
+    统计一段时间内经常访问的数据,对该热点数据进行限流配置,通过@SentinelResource配置降级方法
+    资源名：唯一名称、默认请求路径
+    参数个数：指定第几个参数进行先流规则限制
+    阈值配置：指定多长时间内阈值多少次
+    额外配置项：指定参数值等于多少的时候配置额外的限流方式,进行区分值限流
+Sentinel 系统规则配置
+    通过配置CPU、QPS、线程数、平均响应时间进行阈值管理,当超过阈值后整个系统不可用
+@SentinelResource  注意：不支持private方法
+    value：指定对应资源名(必填)
+    blockHandClass：执行降级方法所在类
+    blockHandler：指定降级方法名
+    fallback：业务异常降级方法名
+    ignoreException：忽略部分异常,返回原样结果
+Sentinel 整合ribbon、openFeign、fallback
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
