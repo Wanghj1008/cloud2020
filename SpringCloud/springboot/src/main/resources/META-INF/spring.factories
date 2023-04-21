@@ -1,0 +1,7 @@
+# 加载其他格式配置文件
+org.springframework.boot.env.PropertySourceLoader=\
+com.example.springboot.other.JsonPropertySourceLoader
+
+org.springframework.context.SpringApplicationRunListener=\
+com.example.springboot.listener.MyApplicationListener
+

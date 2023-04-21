@@ -76,6 +76,8 @@ Spring注解：
     采用Spring架构,会将Component 覆盖成 @Bean方式,所以只有@Bean生效. 可以通过allowBeanDefinitionOverriding配置设置false禁止覆盖,启动报错
     采用SpringBoot架构,2.1之前默认覆盖,2.1之后将allowBeanDefinitionOverriding参数设置成false禁止覆盖,如果想要进行覆盖则需要修改该参数默认值
 
+@ResponseBody注解的作用
+    将controller返回的对象写入到Response的body体中,效果等同于response对象输出指定格式的数据。 通常返回JSON 或XML数据
 
 Spring IOC(控制反转):
     1.Bean实例化方式
@@ -278,8 +280,9 @@ createBean方法详解  todo:扩展三级缓存调用getObject,如何切换到cr
 doCreateBean方法详解,调用结束如果是单例存入一级缓存
     1.实例化Bean【createBeanInstance】:内部判断工厂方法创建实例还是构造方法创建实例(默认构造器执行还是指定构造器执行)
     2.扩展方法【applyMergedBeanDefinitionPostProcessors】,提供外置接口扩展,用于修改BeanDefinition对象
-        1.CommonAnnotationBeanPostProcessor：   支持了@PostConstruct，@PreDestroy,@Resource注解,封装到元数据中
-        2.AutowiredAnnotationBeanPostProcessor  支持 @Autowired,@Value注解,封装到元数据中
+        1.CommonAnnotationBeanPostProcessor：   处理@PostConstruct，@PreDestroy,@Resource注解,封装到元数据中
+        2.AutowiredAnnotationBeanPostProcessor  处理 @Autowired,@Value注解,封装到元数据中
+        3.AnnotationAwareAspectJAutoProxyCreator 处理一些注解或者是AOP切面的动态代理
     3.Bean是单例,并且allowCircularReferences为true,当前Bean在正在创建的单例Bean集合中,将Bean存入三级缓存
     4.属性注入处理方法【populateBean】
         执行实例化后置方法,如果后置方法返回false则不会进行属性填充, 根据类型、名称进行注入就是这里面处理的

@@ -1,3 +1,70 @@
-1.SpringBoot官方建议使用 private final + 构造方法注入 属性
-    1.防止注入的属性被修改
-2.
+Spring Boot优缺点
+    优点：
+        1.自动配置tomcat,SpringMvc和常见功能(字符编码问题,文件上传解析器等),默认包结构(启动类所在包及其所有自包的注解都会被扫描)
+        2.自动依赖管理,SpringBootStartParent父类SpringBootStartDependencies中定义了依赖版本,如需修改找到key在pom中重写即可生效(maven就近配置原则)
+        3.提供生产级别监控,健康管理和外部化配置
+    缺点：
+        1.版本迭代快,需要不断关注,并且底层嵌套代码多不易学习源码
+
+SpringBoot的三种启动方式
+    1.直接在Controller中添加@EnableAutoConfiguration和main方法,运行main方法即可启动
+    2.创建启动类添加@EnableAutoConfiguration+@ComponentScan,运行main方法即可
+    3.创建启动类添加@SpringBootApplication,运行main方法即可
+
+SPI(Service Provider Interface)机制
+    是一种解耦的思想,内部提供接口,第三方通过配置文件的方式进行实现,在框架中比较常见,提高框架的可扩展性
+    1.JDK 内置SPI机制：ServiceLoader
+    2.Spring 内置SPI机制：SpringFactoriesLoader
+        Spring对SPI机制限定配置文件必须在META-INF下,文件名必须是spring.factories,内容必须是键值对形式(可以多个值,逗号隔开,必须是全限定类名)
+    3.Dubbo 内置SPI机制：ExtensionLoader
+
+SpringBoot自动配置原理【基于Spring SPI机制实现的】
+    自动装配通过注解@SpringBootApplication设置默认配置,代替XML配置,也可以通过application.yml修改默认配置
+        1.开启自动配置【EnableAutoConfiguration】
+            内部使用Import导入选择器【AutoConfigurationImportSelector#selectImports】,扫描所有JAR中的spring.factories加载到Spring容器
+        2.标识当前类是配置类【SpringBootConfiguration】
+        3.指定包扫描路径【ComponentScan】
+
+实现支持格式配置文件【PropertySourceLoader】
+    SpringBoot默认支持properties和yml配置文件,当我们想支持其他格式配置需要自定义配置加载类,实现【PropertySourceLoader】 见other包实现
+    Nacos内部通过上述方式实现了Json文件的解析
+
+初始化方法【ApplicationContextInitializer】
+    通过 spring.factories文件进行配置,此时没有执行refresh方法,主要用来对【ConfigurableApplicationContext】应用上下文做修改
+
+WEB应用程序类型【WebApplicationType】
+    1.NONE：普通Web应用程序,不启动额外Web容器
+    2.SERVLET：基于 servlet 的 Web 应用程序,并启动 servlet Web 服务器 例如：Tomcat
+    3.REACTIVE：基于反应式 Web应用程序,启动反应式 Web 服务器
+
+SpringBoot启动流程
+    1.构建 SpringApplication
+        遍历所有Jar包找到 spring.factory,根据配置文件中的KEY找到 【ApplicationContextInitializer】和【ApplicationListener】加入到SpringApplication容器
+        2.通过堆栈信息找到main方法所在类,设置为启动类,后续包路径就是通过启动类拿到
+    2.运行Application.run
+        1.将【java.awt.headless】设置为true:表示运行在服务器端,如果设备显示器和鼠标也可以正常启动运行
+        2.获取所有注册监听器【getRunListeners】,执行【starting】回调方法
+        3.封装默认参数【DefaultApplicationArguments】：封装run方法传入参数,会封装成命令行参数,环境准备设置到环境属性中
+        4.准备环境方法【prepareEnvironment】
+            1.根据应用类型创建对应环境,加载run方法传入参数、系统参数、外部配置文件,可以通过监听器回调【environmentPrepared】方法
+            2.后置处理器【EnvironmentPostProcessor】：通过SPI机制进行挂载,对自定义属性进行加载
+                我们定义的 application.yam文件就是通过【ConfigDataEnvironmentPostProcessor】加载到环境中的
+        5.配置忽略BeanInfo【configureIgnoreBeanInfo】：将spring.beanInfo.ignore设置为true,跳过beanInfo的搜索
+        6.创建应用上下文【createApplicationContext】：通过应用类型实例化应用上下文对象
+
+        7.
+
+
+
+3.底层注解
+    @Configuration
+    @Import：调用默认无参构造给容器中创建组件,key为全类名
+    @Conditional条件装配：满足指定条件才向容器中创建组件
+    @ImportResource：导入Spring配置文件,使配置文件生效
+4.配置绑定
+    ConfigurationProperties
+
+
+
+
+
