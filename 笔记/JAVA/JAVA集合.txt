@@ -1,59 +1,66 @@
-Iterable接口(迭代器)：
-    1.实现此接口的对象可以进行迭代(foreach、Iterator)
-    2.自定义迭代器：需要实现Iterable的Iterator方法就可以使用hasNext和next
-1.迭代器和for循环的区别？
-    1.for循序可以通过下标访问指定元素,而迭代器通过链表next访问下一个元素
-    2.迭代器兼容性强,如果list采用for循环如果集合换成set就需要修改代码,而迭代器无需修改
-2.Iterator与ListIterator(一般使用fro循环--方式遍历)区别如下：
-    ListIterator只能对list集合遍历并且支持逆向遍历(因为有下标),Iterator可以对List、set遍历,不支持双向遍历
-3.fail-fast 与 fail-safe 有什么区别？
-    1.fail-fast:快速失败,遍历过程中其他线程修改了集合就会报错
-    2.fail-safe:安全失败,会对即可拷贝一份遍历,所以不会报错
----------------------------------------------------------------------------------------------------------------
-Collection 接口(集合框架): 提供了一些通用方法让子类自己实现(add、remove)
-Set集合： 无序不可重复,只能设置一个null
-    1.HasSet：基于哈希表,使用Hash算法存储和查询元素,底层就是HashMap,值为HashMap的key, value是一个固定值(Object对象),所以hashSet不可以重复
-    2.LinkedHashSet:是HasSet子类,在HasSet基础上增加了一个链表,所以他是有序的
-    3.TreeSet：是基于二叉树实现的。
-1.HashSet 的实现原理？
-    内部使用HashMap存储数据,value为object对象,因为HashMap无序所以hashSet无序,线程不安全,允许有一个null值,
-2.HashSet 怎么保证元素不重复的？
-    通过对key计算hash找到数组对应位置使用equals进行比较,如果存在返回false,不存在进行添加
+Collection 和 Collections 有什么区别？
+    Collection是一个集合接口,提供了一些通用的方法,子类包含List、Set、Queue、SynchronizedCollection
+    Collections是一个工具类,提供了一些对集合处理的方法 如：排序、最大最小值、获取线程安全集合等
+        1.Collections.synchronizedList()    2.Collections.synchronizedSet()    3.Collections.synchronizedMap()
 
-List集合: 可以设置null值 有序可重复
-    1.ArrayList 和 LinkedList 的区别？
-        1.ArrayList基于数组,LinkedList基于双向链表,索引查询快于指针移动
-        2.千万数据实验下,头插LinkedList快,因为ArrayList所有下标都要偏移  尾插和中间插：ArrayList快
-        总结：查询多肯定用ArrayList,插入多也要区分是头插还是尾插,如果头插选LinkedList 尾插选ArrayList. LinkedLis可用作可视化链路跟踪
-    2.ArrayList 实现 RandomAccess 接口有何作用？
-        1.RandomAccess(随机访问)：只是个标记接口,如果List实现了该接口则for循环比iterator访问更快,并且二分源码中也做了判断来决定for还是iterator
-        2.ArrayList、CopyOnWriteArrayList、Vector都实现了这个随机访问。
-    3.Array 和 ArrayList 有何区别？什么时候更适合用 Array？
-        1.ArrayList只能包含对象,Array可以包含基本数据类型
-        2.ArrayList可以动态扩容,并且提供了多种方法,Array需要指定大小,超过会报错
-        场景：处理基本数据类型且不变的数据采用array可以防止拆装箱,提高性能
-    4.Vector 和 ArrayList 区别？
-        1.Vector所有方法都加锁线程安全但是效率低,一般不会使用
-Queue
-    SynchronousQueue同步队列:进去一个元素，必须等待元素取出 才能继续存放元素
-    blockingQueue阻塞队列：一边存 另一边取
-    AbstractQueue：非阻塞队列
-    Deque双端队列：两边都可以存取
-SynchronizedCollection
-    1.Collections.synchronizedList()
-    2.Collections.synchronizedSet()
-    3.Collections.synchronizedMap()
----------------------------------------------------------------------------------------------------------------
-Map接口(集合框架):表示一组键值对形式  链表O(n)  红黑树O(logn)
+Iterable 接口(迭代器)：
+    1.重写 Iterator 方法,可以通过迭代器进行遍历
+    2.自定义迭代器：需要实现 Iterable 的 Iterator 方法就可以使用hasNext和next
+迭代器和for循环的区别？
+    1.for循环通过数组下标遍历、访问元素,而迭代器通过链表next访问下一个元素
+    2.迭代器兼容性强,集合切换不会影响遍历
+
+fail-fast 与 fail-safe 有什么区别？//todo 2023.4.23
+    1.fail-fast:快速失败,遍历时如果有修改会抛出并发修改异常,java.util包下集合都是快速失败
+    2.fail-safe:安全失败,会对即可拷贝一份遍历,所以不会报错,JUC包下的集合都是安全失败,保证线程安全
+
+
+
+ArrayList：可以设置null值,有序可重复
+1.ArrayList 和 LinkedList 的区别？ //todo 2023.4.23
+    1.ArrayList基于数组,LinkedList基于双向链表,索引查询快于指针移动
+    2.千万数据实验下,头插LinkedList快,因为ArrayList所有下标都要偏移  尾插和中间插：ArrayList快
+    总结：查询多肯定用ArrayList,插入多也要区分是头插还是尾插,如果头插选LinkedList 尾插选ArrayList. LinkedLis可用作可视化链路跟踪
+2.ArrayList 实现 RandomAccess 接口有何作用？
+    1.RandomAccess(随机访问)：只是个标记接口,如果List实现了该接口则for循环比iterator访问更快,并且二分源码中也做了判断来决定for还是iterator
+    2.ArrayList、CopyOnWriteArrayList、Vector都实现了这个随机访问。
+3.Array 和 ArrayList 有何区别？什么时候更适合用 Array？
+    1.ArrayList只能包含对象,Array可以包含基本数据类型
+    2.ArrayList可以动态扩容,并且提供了多种方法,Array需要指定大小,超过会报错
+    场景：处理基本数据类型且不变的数据采用array可以防止拆装箱,提高性能
+4.Vector 和 ArrayList 区别？ synchronizedList、CopyOnWriteArrayList
+    1.Vector所有方法都加锁线程安全但是效率低,一般不会使用
+5.ArrayList的 set 和 get 方法源码？ //todo 2023.4.23 下同
+    get：判断数组是否越界,根据索引获取对应位置的元素
+    set：判断数组是否越界,根据索引获取对应位置的元素,新元素覆盖,返回旧元素的值
+6.ArrayList 的 add 方法源码？
+    1.如果数组为空进行初始化,默认为10
+    2.如果不为空判断是否需要扩容,调用扩容方法
+    3.如果不需要扩容找到指定位置插入,默认尾插,如果增加索引后面元素会后移
+7.ArrayList 扩容方法？
+    1.如果数组为空,初始化数组为10,如果不为空根据数组长度判断是否需要扩容
+    2.如果需要扩容调用扩容方法(grow)
+        1.越界检查,扩容最大值是 Integer.MAX - 8
+        2.将数组扩容1.5倍,判断容量是否充足
+        3.如果扩容后还不够存放直接将数组扩容到 需要的大小
+    3.扩容后调用【copyOf】将原数组内部数据指针切换到新数组
+8.为什么数组最大值是 Integer.MAX - 8？
+    因为数组需要额外存储元数据信息,所以保留了部分空间
+9.CopyOnWriteArrayList、CopyOnWriteArraySet原理
+    读的时候不加锁,写的时候复制一份操作,操作完毕将指针指向新数组
+    优点：复制的时候进行+1操作，不需要扩容   缺点:1.写的时候都要复制数组,消耗内存  2.读不加锁,会出现脏数据情况
+
+
+Map接口(集合框架): 无序,可以存null,但是只能有一个key为null  链表时间复杂度:O(n)  红黑树O时间复杂度:(logn)
     1.HashMap：无特殊需求都可以使用
     2.LinkedHasMap:需要记录访问顺序或插入顺序
     3.TreeMap：需要自定义排序  同时实现Comparator实现排序
     4.ConcurrentHashMap：需要保证线程安全
-位运算
-    左移<< 右移>> 无符号左移<<<  无符号右移相当于十进制/2  无符号左移相当于十进制*2
-2.HashMap的构造方法
-    1.判断初始容量如果小于0抛异常  2.加载因子小于0抛异常   3.初始容量超过最大值2^30赋值最大  4.tableSizeFor寻找最近的2的幂次方值
-3.HashMap的resize方法执行过程(Map初始化和扩容使用)
+1.HashMap 的构造方法
+    1.参数检查【容量<0 || 加载因子<0】
+    2.容量超过最大值2^30,赋值最大
+    3.tableSizeFor 寻找最近的2的幂次方值
+2.HashMap的扩容方法【resize】源码
     1.如果table为空则为初始化,采用默认16和0.75进行初始化
     2.如果table不为空则为扩容
         1.判断旧数组长度是否>=最大数组,如果是将阈值改成最大值,就是以后不触发扩容
@@ -64,7 +71,7 @@ Map接口(集合框架):表示一组键值对形式  链表O(n)  红黑树O(logn
             1.JDK7为链表,重新计算hash放到新数组
             2.JDK8链表或者红黑树,拆解后一部分下标不变,一部分e.hash+oldCap为新下标,如果拆解后红黑树的个数<=6则会转换成链表
     问题：JDK7的resize会出现环状形成死锁,JDK8通过改变下标已经修复,但是依旧是线程不安全的,并发下推荐使用ConcurrentHashMap
-4.HashMap的put方法执行过程
+3.HashMap的 put 方法源码
     1.判断数组是否为空,如果数组为空执行resize初始化数组
     2.计算hash判断node是否为空,如果为空创建一个新node存入数组,不为空说明产生hash冲突
         1.判断key是否存在,存在进行替换操作,返回旧值,不存在判断是树还是链表
@@ -73,63 +80,60 @@ Map接口(集合框架):表示一组键值对形式  链表O(n)  红黑树O(logn
     3.判断put后空间是否>=阈值进行扩容操作
     扩展：put最后afterNodeInsertion方法是干什么？
         1.提供给子类LinkedHashMap实现的方法,用来移除最早放入Map的对象
-5.HashMap的get方法执行过程
+4.HashMap的get方法执行过程
     1.如果table为空直接返回null,计算hash判断数组位置是否为空,不为空遍历树或者链表用equals比较,不存在返回null存在返回值
     问题：无法判断某个key是否存在map中,因为如果key的值也为null会混淆
-6.为什么装载因子是0.75
+5.为什么装载因子是0.75
     经过统计7-8发生冲突的概率都小于百万分之一,所以7-8直接都可以,因为0.75即3/4可以优化位运算,效率比乘法高所以采用0.75
-7.HashMap 的 size 为什么必须是 2 的整数次方？
+6.HashMap 的 size 为什么必须是 2 的整数次方？
     HashMap中使用indexFor方法计算key在数组索引位置,代码是hash和length-1的与运算。
     2的整数次方-1二进制全为1可以计算到所有索引位置,如果二进制出现0会导致数组部分位置永远计算不到,数据分布不均匀
-8.HashMap 和 HashTable 的区别？
-    1.HashMap线程不安全,,HashTable线程安全,不可以空键空值会抛异常而hashMap空键转换成0计算hash所以可以空键空值
-    2.初始化容量和扩容大小都不同,hashmap初始化16扩容2倍。
-9.为什么链表转红黑树的阈值是8？
+7.HashMap 和 HashTable 的区别？
+    1.HashMap线程不安全,,HashTable线程安全
+    2.HashTable不可以空键空值会抛异常,hashMap空键转换成0计算hash所以可以空键空值
+    3.初始化容量和扩容大小都不同,hashmap初始化16扩容2倍。
+8.为什么链表转红黑树的阈值是8？
     因为红黑树占用空间是链表的两倍,如果节点少转化成红黑树查询时间优化效果不明显
-10.那为什么转回链表节点是用的6而不是复用8？
+9.那为什么转回链表节点是用的6而不是复用8？
     如果设置大于8转红黑树,等于8转链表如果节点在8之前徘徊就会一直相互转换消耗性能
-11.JDK7死循环 todo
+10.JDK7死循环(尾插法)
     两个线程同时扩容时,A线程获取到第一个元素后阻塞,B线程进行完整的扩容,因为头插法顺序会反转,此时A线程继续头插就会导致死循环
-12.JDK7->JDK8优化
+11.JDK7->JDK8优化
     1.头插改尾插,解决死循环  2.增加红黑树,提高性能  3.扩容计算新索引位置采用 &计算
-
-1.ConcurrentHashMap 的实现原理是什么？(类似mysql的myisam和innodb引擎的行锁表锁)
+12.ConcurrentHashMap 的实现原理是什么？(类似mysql的myisam和innodb引擎的行锁表锁)
     1.JDK7采用分段锁,将数组分段锁定,JDK8使用cas和synchronized只对头节点进行锁定,提高性能
     2.采用volatile 修饰value和next保证可见性
-2.ConcurrentHashMap的put方法原理
+13.ConcurrentHashMap的put方法原理
     1.key和value为空抛异常,不为空进入自旋锁
     2.如果数组为空进入初始化,计算hash找到数组对应位置采用cas交换,交换完毕退出自旋锁结束
     3.如果遇到扩容,当前线程会参与执行扩容,对数组进行分片扩容,最小分片数16提高CPU使用率
     4.上述都不是则发生hash冲突,对头节点加锁,链表对所有key遍历存在覆盖不存在最后插入,>8切换红黑树。树的话进行节点增加
-3.ConcurrentHashMap的get方法原理
+14.ConcurrentHashMap的get方法原理
     1.计算hash判断数组对应位置值是否相同,相同返回,不相同判断树还是链表进行对应的查找,查询不到返回null
-4.ConcurrentHashM的size方法
+15.ConcurrentHashM的size方法
     获取到的是一个接近值,并发高的时候好像采用数组处理的
-5.HashMap、HashTable、ConcurrentHashMap
+16.HashMap、HashTable、ConcurrentHashMap
     hashMap线程不安全允许空建空值，其他两个线程安全,不允许空建空值。HashTable对整个map加锁,ConcurrentHashMap只对头节点加锁提高性能
-6.LinkedHashMap 的实现原理?TreeMap？TreeSet？ todo 1~7
+17.LinkedHashMap 的实现原理?TreeMap？TreeSet？
     LinkedHashMap采用双向链表保存了数据的访问顺序
     TreeMap底层采用红黑树,通过重写compare 完成自定义排序,没有实现按照key升序排序
     TreeSet底层使用TreeMap,底层重写compare 完成自定义排序,没有实现按照key升序排序
-7.CopyOnWriteArrayList、CopyOnWriteArraySet原理
-    读的时候不加锁,写的时候复制一份操作,操作完毕将指针指向新数组
-    优点：复制的时候进行+1操作，不需要扩容   缺点:1.写的时候都要复制数组,消耗内存  2.读不加锁,会出现脏数据情况
----------------------------------------------------------------------------------------------------------------
-1.ArrayList的set和get方法源码？
-    get：判断数组是否越界,根据索引获取对应位置的元素
-    set：判断数组是否越界,根据索引获取对应位置的元素,新元素覆盖,返回旧元素的值
-2.ArrayList的add方法源码？
-    1.直接调用扩容方法,数组为空初始化,数组不为空判断是否需要扩容进行扩容
-    2.如果指定位置增加需要所有元素后移然后插入,如果正常add在最后插入数据
-3.ArrayList扩容方法？
-    1.如果数组为空,初始化数组为10,如果不为空+1判断是否需要扩容
-    2.如果需要扩容调用扩容方法(grow)
-        1.将数组扩容1.5倍,如果还不够检查add之后是否超过数组最大值,直接扩容到add之后的大小
-    3.调用 arraycopy 方法进行数组复制(浅拷贝,只复制指针)
-    追问：为什么 数组MAX_ARRAY_SIZE 等于 Integer.MAX - 8 ？
-        因为数组需要额外存储元数据信息,所以保留了部分空间
----------------------------------------------------------------------------------------------------------------
-1.ThreadLocal的set()方法源码？
+
+
+
+
+Set集合：无序不可重复,只能设置一个null
+    1.HasSet
+    2.LinkedHashSet:是HasSet子类,在HasSet基础上增加了一个链表,所以他是有序的
+    3.TreeSet：是基于二叉树实现的
+1.HashSet 的实现原理？
+    内部使用HashMap存储数据,value为object对象,因为HashMap无序所以hashSet无序,线程不安全
+2.HashSet 怎么保证元素不重复的？
+    通过对key计算hash找到数组对应位置使用equals进行比较,如果存在返回false,不存在进行添加
+
+
+
+1.ThreadLocal 的 set 方法源码？
     1.先获取当前线程,然后拿到ThreadLocalMap,如果为空初始化ThreadLocalMap传入key和value,初始容量为16
     2.如果不为空计算key的hash获取数组对应位置,遍历判断key是否相同,如果遍历到空位置则进行插入,如果存在相同key进行覆盖
     3.插入完毕后判断是否需要扩容,调用扩容方法
@@ -139,10 +143,7 @@ Map接口(集合框架):表示一组键值对形式  链表O(n)  红黑树O(logn
 3.ThreadLocal的扩容方法源码？
     1.清空掉key为空的entry,如果清空后长度还超过3/4则进行扩容,扩容为老表的2倍
     2.移动数据时如果key为空删除,不为空计算hash存入新表,发生冲突则向后寻找空位置插入,最后设置阈值、指针指向新表
----------------------------------------------------------------------------------------------------------------
-Collection 和 Collections 有什么区别？
-    Collection是一个集合接口,提供了一些通用的方法,子类包含List、Set、Queue、SynchronizedCollection
-    Collections是一个工具类,提供了一些对集合处理的方法 如：排序、最大最小值、获取线程安全集合等
----------------------------------------------------------------------------------------------------------------
+
+
 1.StringBuffer和StringBuilder扩容机制
-    1.无参构造默认存放16个字符,扩容大小为原始*2+2   之所以加2是因为拼接后末尾存在多于字符
+    1.无参构造默认存放16个字符,扩容大小为原始*2+2,加2是因为拼接后末尾存在多余字符
