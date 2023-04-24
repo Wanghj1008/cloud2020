@@ -11,7 +11,7 @@
   1.可以对线程统一管理,并且减少线程创建和销毁的开销,可以创建最大线程数和拒绝策略来控制线程数,实现线程复用,
   Executor框架包括：线程池，Executor，Executors，ExecutorService，CompletionService，Future，Callable等。
   Executors提供四张线程池创建。 single fixed schedule cached  但是可能造成OOM  推荐使用ThreadPoolExecutor
-5.如何停止一个正在运行的线程？
+5.如何停止一个正在运行的线程？ //todo 2023.04.24
    1.使用stop命令停止线程,是一种恶意中断,无论执行是否完整都会立即中断线程,可能会破坏原子性
    2.使用 interrupt 生成中断标记,使用isInterrupt判断是否存在终端标记,return中止
    3.当线程处于  sleep,wait,join 的时候,如果使用interrupt会抛出异常终止
