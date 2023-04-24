@@ -242,6 +242,7 @@ Spring生命周期
     11.完成刷新【finishRefresh】
         1.初始化生命周期处理器【initLifecycleProcessor】
             如果有实现了 SmartLifecycle 的Bean会进行注册执行,前提自启动标识(isAutoStartup)为true,并且内部实现了优先级方法可以按序执行
+            *SpringBoot内嵌Tomcat启动就是实现了生命周期处理器,在Spring容器创建完毕后启动Tomcat
         2.发布容器创建完毕事件,触发对应监听器
 
 实例化单例Bean【preInstantiateSingletons】

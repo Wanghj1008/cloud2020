@@ -4,6 +4,7 @@ import com.example.springboot.other.User;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 
 @EnableAutoConfiguration
@@ -18,5 +19,8 @@ public class SpringbootApplication {
 		System.out.println(bean.getName() + "\t" + bean.getAge());
 	}
 
-
+	@Bean
+	public User getUser(){
+		return new User();
+	}
 }

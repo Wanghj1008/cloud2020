@@ -50,11 +50,25 @@ SpringBoot启动流程
             2.后置处理器【EnvironmentPostProcessor】：通过SPI机制进行挂载,对自定义属性进行加载
                 我们定义的 application.yam文件就是通过【ConfigDataEnvironmentPostProcessor】加载到环境中的
         5.配置忽略BeanInfo【configureIgnoreBeanInfo】：将spring.beanInfo.ignore设置为true,跳过beanInfo的搜索
-        6.创建应用上下文【createApplicationContext】：通过应用类型实例化应用上下文对象
+        6.创建应用上下文【createApplicationContext】：通过应用类型实例化应用上下文对象 todo 后续补充
 
-        7.
+        7.实例化异常分析器【getSpringFactoriesInstances】:
+            如果缓存为空扫描所有META-INF/spring.factories文件进行加载,不为空匹配异常分析器通过反射进行实例化,启动过程中如果发生异常通过内部封装实例进行异常封装响应
+        8.准备上下文方法【prepareContext】
+            1.将封装好的环境信息传入上下文context中  *上文创建异常分析器时设置了
+            2.
+            3.执行 spring.factory 载入的初始化器对应初始化方法
+            4.执行监听器【contextPrepared】回调方法
 
-
+SpringBoot 内置Tomcat源码
+    1.Springboot中通过应用程序类型创建对应环境和应用上下文对象,需要额外启动对应类型的容器
+        1.底层通过 autoconfigure.jar中的 spring.factories 文件中包含的自动配置类【EmbeddedWebServerFactoryCustomizerAutoConfiguration】进行相应选择
+        2.通过 @ConditionalOnClass 注解对底层引入的Class类进行选择,创建相对应的容器工厂
+            1.Tomcat：Servlet引擎,采用分层架构相对比复杂一点,底层使用BIO,处理静态资源性能较差。总体性能和Jetty查不到
+            2.Jetty：Servlet引擎,组件基于Handle实现,底层使用NIO,可以同时处理大量连接,适合当作Web聊天应用,并且是拔插式组件,减少内存开销(也是Google选择Jetty的原因)
+            3.Netty：网络通讯框架,底层使用Socket(TCP/IP协议),主要用于异步通讯。  而tomcat和Jetty使用Http协议
+    2.重写Spring的【onRefresh】方法实现,内部调用创建Web服务方法【createWebServer】,调用上述容器工厂内初始化方法进行创建
+    3.重写Spring的【finishRefresh】方法里的【startBeans】实现对容器的启动,其实通过是生命周期处理器的回调方法实现Spring容器启动后挂载启动Tomcat
 
 3.底层注解
     @Configuration
