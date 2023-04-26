@@ -21,34 +21,28 @@ SPI(Service Provider Interface)机制
 SpringBoot自动配置原理【基于Spring SPI机制实现的】
     自动装配通过注解@SpringBootApplication设置默认配置,代替XML配置,也可以通过application.yml修改默认配置
         1.开启自动配置【EnableAutoConfiguration】
-            内部使用Import导入选择器【AutoConfigurationImportSelector#selectImports】,扫描所有JAR中的spring.factories加载到Spring容器
+            1.内部使用Import导入选择器【AutoConfigurationImportSelector#selectImports】,扫描所有JAR中的spring.factories
+            2.解析文件,找到对应处理类根据@ConditionalOnClass进行匹配,如果条件满足,加载到Spring容器中,根据相对应配置进行对应参数封装
         2.标识当前类是配置类【SpringBootConfiguration】
         3.指定包扫描路径【ComponentScan】
-
-实现支持格式配置文件【PropertySourceLoader】
-    SpringBoot默认支持properties和yml配置文件,当我们想支持其他格式配置需要自定义配置加载类,实现【PropertySourceLoader】 见other包实现
-    Nacos内部通过上述方式实现了Json文件的解析
-
-初始化方法【ApplicationContextInitializer】
-    通过 spring.factories文件进行配置,此时没有执行refresh方法,主要用来对【ConfigurableApplicationContext】应用上下文做修改
 
 WEB应用程序类型【WebApplicationType】
     1.NONE：普通Web应用程序,不启动额外Web容器
     2.SERVLET：基于 servlet 的 Web 应用程序,并启动 servlet Web 服务器 例如：Tomcat
     3.REACTIVE：基于反应式 Web应用程序,启动反应式 Web 服务器
 
-SpringBoot启动流程
+SpringBoot启动流程 todo 补充完整流程
     1.构建 SpringApplication
         遍历所有Jar包找到 spring.factory,根据配置文件中的KEY找到 【ApplicationContextInitializer】和【ApplicationListener】加入到SpringApplication容器
         2.通过堆栈信息找到main方法所在类,设置为启动类,后续包路径就是通过启动类拿到
     2.运行Application.run
         1.将【java.awt.headless】设置为true:表示运行在服务器端,如果设备显示器和鼠标也可以正常启动运行
-        2.获取所有注册监听器【getRunListeners】,执行【starting】回调方法
-        3.封装默认参数【DefaultApplicationArguments】：封装run方法传入参数,会封装成命令行参数,环境准备设置到环境属性中
+        2.获取所有注册监听器【getRunListeners】,获取【SpringApplicationRunListener】实现类,执行【starting】回调方法
+        3.封装默认参数【DefaultApplicationArguments】：封装run方法传入参数,会封装成命令行参数,后续进行加载
         4.准备环境方法【prepareEnvironment】
-            1.根据应用类型创建对应环境,加载run方法传入参数、系统参数、外部配置文件,可以通过监听器回调【environmentPrepared】方法
+            1.根据配置加载顺序进行加载,加载完毕后可以通过SpringBoot生命周期监听器回调【environmentPrepared】方法,或通过事件监听器监听环境准备发布事件
             2.后置处理器【EnvironmentPostProcessor】：通过SPI机制进行挂载,对自定义属性进行加载
-                我们定义的 application.yam文件就是通过【ConfigDataEnvironmentPostProcessor】加载到环境中的
+                application.yam文件就是通过【ConfigDataEnvironmentPostProcessor】加载到环境中的
         5.配置忽略BeanInfo【configureIgnoreBeanInfo】：将spring.beanInfo.ignore设置为true,跳过beanInfo的搜索
         6.创建应用上下文【createApplicationContext】：通过应用类型实例化应用上下文对象 todo 后续补充
 
@@ -60,6 +54,13 @@ SpringBoot启动流程
             3.执行 spring.factory 载入的初始化器对应初始化方法
             4.执行监听器【contextPrepared】回调方法
 
+启动流程构建的【ApplicationListener】 和 run方法中回调的【SpringApplicationRunListener】区别
+    1.ApplicationListener:监听Springboot启动过程中发布的事件,基于Spring事件发布机制
+    2.SpringApplicationRunListener:监听Springboot启动每个生命周期,到了对应生命周期执行监听器内回调方法,Springboot提供了一个默认实现,在每个阶段发布对应事件
+    3.ApplicationContextInitializer：容器的初始化方法,在容器创建前执行,上述ApplicationListener就是通过Springboot默认提供的初始化器注册的
+初始化方法【ApplicationContextInitializer】
+    通过 spring.factories文件进行配置,此时没有执行refresh方法,主要用来对【ConfigurableApplicationContext】应用上下文做修改
+
 SpringBoot 内置Tomcat源码
     1.Springboot中通过应用程序类型创建对应环境和应用上下文对象,需要额外启动对应类型的容器
         1.底层通过 autoconfigure.jar中的 spring.factories 文件中包含的自动配置类【EmbeddedWebServerFactoryCustomizerAutoConfiguration】进行相应选择
@@ -70,13 +71,37 @@ SpringBoot 内置Tomcat源码
     2.重写Spring的【onRefresh】方法实现,内部调用创建Web服务方法【createWebServer】,调用上述容器工厂内初始化方法进行创建
     3.重写Spring的【finishRefresh】方法里的【startBeans】实现对容器的启动,其实通过是生命周期处理器的回调方法实现Spring容器启动后挂载启动Tomcat
 
-3.底层注解
-    @Configuration
-    @Import：调用默认无参构造给容器中创建组件,key为全类名
-    @Conditional条件装配：满足指定条件才向容器中创建组件
-    @ImportResource：导入Spring配置文件,使配置文件生效
-4.配置绑定
-    ConfigurationProperties
+如何理解SpringBoot的starter
+    新创建项目需要进行依赖配置,引入后续需要的JAR,通过springbootStart提供组合依赖,方便依赖配置,但是一般都通过SpringbootStartParent进行版本控制
+
+SpringBoot 中配置加载优先级     *当存在相同属性配置时,会从属性列表按序查找,找到就会返回。
+    1.configurationProperties,将属性注入到Bean中,可以通过前缀匹配,默认加载 application.yml
+    2.命令行参数,jar包启动拼接的参数或 SpringBoot 启动类设置的参数都属于命令行参数
+    3.servlet初始化属性、Web容器初始化参数、JVM参数、操作系统属性变量
+    4.随机数Random,Springboot内置了实现类,可以在配置文件中直接使用${random.int}等方式获取整形、长整型、UUID等
+    5.配置文件(YML、properties)
+        1.SpringBoot跟目录下的配置文件【根目录config下的最先被加载,然后时默认路径下的配置】
+        2.Springboot的资源(Resource)目录下的配置文件【资源config下的最先被加载,然后时默认路径下的配置】
+    6.类上@PropertySource注解,指定加载的配置文件,不指定默认application
+    7.通过SpringApplication.setDefaultProperties 指定的默认属性,通过获取应用上下文调用对应方法注入参数
+    主要就是为了避免配置不生效问题,可以通过环境获取内部所有属性列表查看属性加载顺序,还可以通过日志打印判断
+
+YML文件的优缺点
+    优点：1.语法更加简洁,但是格式出错不太容易发现  2.可以跨语言,PHP,javaScript,java都可以使用,配置中心只需要保存一份配置
+    缺点：yml文件不支持使用 PropertySource注解 进行导入
+Spring Boot 是否可以使用 XML 配置 ?
+    Springboot推荐使用配置类进行配置,约定大于配置.但是仍然可以使用XML,通过@ImportResource 引入Spring的注解,项目改造中会先引入注解慢改造
+bootstrap.properties 和 application.properties 有何区别 ?
+    bootstrap 一般都是分布式服务从Nacos或cloud config的GIT上拉取公共配置使用,加载优先级高
+    application一般设置一些单服务特有的配置,例如端口等,并且配置文件可以通过 Profiles进行环境指定,包括加载类可以通过Profiles注解根据环境加载
+实现其他格式配置文件【PropertySourceLoader】
+    SpringBoot默认支持properties和yml配置文件,当我们想支持其他格式配置需要自定义配置加载类,实现【PropertySourceLoader】 见other包实现
+    Nacos内部通过上述方式实现了Json文件的解析
+
+Spring Boot 如何实现容器启动后自动执行
+    1.ApplicationRunner,入参是run方法参数封装好后的对象,优先级先执行
+    2.CommandLineRunner,入参是run方法参数
+    3.扩展Spring内部的自动执行方式
 
 
 

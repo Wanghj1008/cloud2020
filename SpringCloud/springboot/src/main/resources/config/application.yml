@@ -1,0 +1,7 @@
+server:
+  port: 9991
+
+main:
+  hostName: 主机名
+  port: 10086
+  from: 中国

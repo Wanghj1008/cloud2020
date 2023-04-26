@@ -2,6 +2,9 @@
 org.springframework.boot.env.PropertySourceLoader=\
 com.example.springboot.other.JsonPropertySourceLoader
 
-org.springframework.context.SpringApplicationRunListener=\
+org.springframework.boot.SpringApplicationRunListener=\
 com.example.springboot.listener.MyApplicationListener
+
+org.springframework.context.ApplicationListener=\
+com.example.springboot.listener.MyApplicationStartListener
 
