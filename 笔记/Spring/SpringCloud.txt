@@ -19,10 +19,10 @@ SpringCloud 和 Dubbo 区别？ //todo 2023.04.15
     Dubbo 采用 Zookeeper做注册中心、采用RPC方式远程调用、性能高因为数据二进制传输,比HTTP报文方式节约性能
     Spring Cloud 可以自主选择组件、采用HTTP远程调用、性能不如Dubbo但是提供了多种分布式解决方案
 RestTemplate 和 RPC 区别？
-    1.RestTemplate采用HTTP协议,基于TCP协议,消息封装比较臃肿,发送速度慢.
-    2.RPC基于Socket,速度快效率高,典型代表Dubbo、WebSocket、ES集群间调用
+    RPC一般内容调用方式,基于Socket,采用流传输所以性能比HTTP高。 场景：Dubbo、WebSocket、ES集群间,都是采用RPC调用
+    RestTemplate基于HTTP,一般对外调用,数据封包比较大,性能不如RPC,但是HTTP2.0引入长连接,并且对数据头进行压缩,底层也采用流传输,性能和RPC差不多
 常用RPC远程调用框架有哪些？
-    1.httpclient   2.GRPC   3.dubbo   4.openFeign
+    1.httpclient   2.GRPC   3.dubbo   4.openFeign   5.WebSocket    6.ES集群间通讯
 RPC实现原理？
     1.采用TCP建立通讯-->通过IP+端口进行服务寻址-->对参数进行序列化进行网络传输-->收到后反序列化得到参数进行服务调用做出响应(代理增加响应发送)
 微服务之间如何独立通讯的?
