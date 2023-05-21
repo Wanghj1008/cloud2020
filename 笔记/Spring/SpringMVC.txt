@@ -20,12 +20,13 @@ SpringMvc核心组件
 
 
 
-
-常用的HttpMethod
-    1.GET(查询)    2.Put(插入)   3.Delete(删除)    4.post(修改)    5.PATCH[获取Http的patch方法]
-
-classpath:和classpath*:区别
-    带*他会搜索所有的classpath,包含依赖的Jar内的也会扫描！  一致性差有时候会出现问题,一般情况下没必须用*！
+SpringMvc工作流程
+    1.浏览器发送请求到前端控制器【DispatcherServlet】
+    2.前端控制器通过请求URI,和处理器映射器【HandlerMapping】比对找到对应处理器【Handler】
+    3.前端控制器通过Handler,查询对应处理器适配器【HandlerAdaptor】,执行具体Handler
+    4.将执行结构封装成【ModelAndView 】对象,响应给前端控制器
+    5.前端控制器通过视图解析器【ViewResolver】将Mode渲染到View上
+    6.将渲染结果返回给前端控制器,最终响应给浏览器展示
 
 
 

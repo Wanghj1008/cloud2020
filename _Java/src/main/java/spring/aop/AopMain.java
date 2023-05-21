@@ -1,9 +1,9 @@
 package spring.aop;
 
 import org.springframework.context.support.ClassPathXmlApplicationContext;
-import proxy.CglibProxyFactory;
-import proxy.FoodService;
-import proxy.FoodServiceImpl;
+import 设计模式.结构型模式.代理模式.CglibProxyFactory;
+import 设计模式.结构型模式.代理模式.FoodService;
+import 设计模式.结构型模式.代理模式.FoodServiceImpl;
 
 /**
  * @author 王昊杰

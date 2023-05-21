@@ -1,4 +1,4 @@
-package proxy;
+package 设计模式.结构型模式.代理模式;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;

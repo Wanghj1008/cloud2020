@@ -1,4 +1,4 @@
-package proxy;
+package 设计模式.结构型模式.代理模式;
 
 //实现接口
 public class FoodServiceImpl implements FoodService {

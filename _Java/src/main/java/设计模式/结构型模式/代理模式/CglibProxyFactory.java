@@ -1,9 +1,8 @@
-package proxy;
+package 设计模式.结构型模式.代理模式;
 
 import org.springframework.cglib.proxy.Enhancer;
 import org.springframework.cglib.proxy.MethodInterceptor;
 import org.springframework.cglib.proxy.MethodProxy;
-import org.springframework.cglib.proxy.Proxy;
 
 import java.lang.reflect.Method;
 

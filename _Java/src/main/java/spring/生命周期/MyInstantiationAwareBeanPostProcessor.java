@@ -1,15 +1,12 @@
 package spring.生命周期;
 
 import org.springframework.beans.BeansException;
-import org.springframework.beans.PropertyValue;
 import org.springframework.beans.PropertyValues;
 import org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessor;
-import org.springframework.beans.factory.config.InstantiationAwareBeanPostProcessorAdapter;
 import org.springframework.stereotype.Component;
-import proxy.CglibProxyFactory;
-import proxy.FoodService;
-import proxy.FoodServiceImpl;
-import proxy.JDKProxyFactory;
+import 设计模式.结构型模式.代理模式.CglibProxyFactory;
+import 设计模式.结构型模式.代理模式.FoodService;
+import 设计模式.结构型模式.代理模式.FoodServiceImpl;
 
 @Component
 public class MyInstantiationAwareBeanPostProcessor implements InstantiationAwareBeanPostProcessor {
